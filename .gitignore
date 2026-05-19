@@ -10,3 +10,4 @@ __pycache__/
 .vscode/
 prd.md
 supabase_setup.sql
+progress.txt
