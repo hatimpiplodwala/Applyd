@@ -1,0 +1,55 @@
+Job Tracker - Build Progress
+==============================
+Started:  2026-05-19
+Finished: 2026-05-19
+
+Tasks
+-----
+[x] 1. Create progress.txt
+[x] 2. Create .gitignore and requirements.txt
+[x] 3. Create .streamlit/config.toml (dark theme)
+[x] 4. Create .env.example
+[x] 5. Create supabase_setup.sql
+[x] 6. Create db.py (Supabase client + CRUD)
+[x] 7. Create auth.py (login/register/logout)
+[x] 8. Create components/stats_sidebar.py
+[x] 9. Create components/applications_table.py
+[x] 10. Create components/application_form.py
+[x] 11. Create app.py (entry point)
+[x] 12. Syntax-check all Python files (all pass)
+
+Legend: [ ] pending  [~] in progress  [x] done
+
+File map
+--------
+app.py                            Entry point: login vs dashboard routing
+auth.py                           Sign-in / sign-up / sign-out + login page
+db.py                             Supabase client, CRUD, duplicate check
+components/stats_sidebar.py       Sidebar: app title, Total + Active, logout
+components/applications_table.py  Filters, color-badge table, CSV download
+components/application_form.py    Add dialog + sidebar edit panel + delete confirm
+.streamlit/config.toml            Dark theme
+supabase_setup.sql                Table + RLS + updated_at trigger
+.env.example                      Template for SUPABASE_URL / SUPABASE_KEY
+requirements.txt                  streamlit, supabase, python-dotenv, pandas
+.gitignore                        Ignores .env, secrets, __pycache__
+
+Next steps for the user
+-----------------------
+1. Create a Supabase project at supabase.com
+2. Run supabase_setup.sql in the Supabase SQL editor
+3. Copy .env.example to .env and fill in SUPABASE_URL and SUPABASE_KEY
+4. pip install -r requirements.txt
+5. streamlit run app.py
+6. For deployment: push to GitHub, deploy on share.streamlit.io,
+   add SUPABASE_URL and SUPABASE_KEY in the Streamlit Cloud secrets UI.
+
+Known limitations / v1 trade-offs
+---------------------------------
+- No email verification or password reset (per PRD)
+- Status validation in Python only (no DB CHECK constraint)
+- Add dialog uses st.dialog (requires Streamlit >= 1.35)
+- Edit panel renders in the same left sidebar (Streamlit has no
+  right-side sidebar API); behavior matches PRD intent
+- "Click row" is implemented as an Edit button on each row, since
+  Streamlit tables don't have native row-click events
