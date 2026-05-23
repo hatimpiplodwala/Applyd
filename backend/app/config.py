@@ -17,6 +17,10 @@ class Settings:
             ).split(",")
             if o.strip()
         ]
+        # Optional: enables POST /applications/parse-url. Empty string -> disabled.
+        self.gemini_api_key: str = os.environ.get(
+            "GEMINI_API_KEY", ""
+        ).strip()
 
 
 @lru_cache

@@ -6,6 +6,7 @@ const COLUMNS: { key: keyof Application; header: string }[] = [
   { key: "location", header: "Location" },
   { key: "status", header: "Status" },
   { key: "date_applied", header: "Date Applied" },
+  { key: "follow_up_date", header: "Follow-up Date" },
   { key: "job_url", header: "Job URL" },
   { key: "salary_range", header: "Salary Range" },
   { key: "contact_name", header: "Contact" },

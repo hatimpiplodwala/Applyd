@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import applications
+from app.routers import applications, parse
 
 settings = get_settings()
 
@@ -23,3 +23,4 @@ def health() -> dict[str, str]:
 
 
 app.include_router(applications.router)
+app.include_router(parse.router)

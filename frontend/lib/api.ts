@@ -48,4 +48,17 @@ export const api = {
       `/applications/duplicate-check?${params}`
     );
   },
+  parseJob: (input: { url?: string; text?: string }) =>
+    request<ParsedJob>("/applications/parse-url", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
 };
+
+export interface ParsedJob {
+  company: string | null;
+  role: string | null;
+  location: string | null;
+  salary_range: string | null;
+  job_url: string | null;
+}

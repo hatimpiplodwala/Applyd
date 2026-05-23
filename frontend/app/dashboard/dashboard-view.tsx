@@ -4,9 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { StatsSidebar } from "@/components/stats-sidebar";
 import { ApplicationsTable } from "@/components/applications-table";
 import { ApplicationFormDialog } from "@/components/application-form-dialog";
+import { KanbanBoard } from "@/components/kanban-board";
 import { api } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
 import type { Application } from "@/lib/types";
+
+type View = "table" | "kanban";
 
 interface DashboardViewProps {
   email: string;
@@ -18,6 +21,7 @@ export function DashboardView({ email }: DashboardViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Application | null>(null);
+  const [view, setView] = useState<View>("table");
 
   const load = useCallback(async () => {
     setError(null);
@@ -95,11 +99,21 @@ export function DashboardView({ email }: DashboardViewProps) {
             </div>
           )}
 
-          <ApplicationsTable
-            applications={applications}
-            loading={loading}
-            onEdit={setEditing}
-          />
+          <ViewTabs view={view} onChange={setView} />
+
+          {view === "table" ? (
+            <ApplicationsTable
+              applications={applications}
+              loading={loading}
+              onEdit={setEditing}
+            />
+          ) : (
+            <KanbanBoard
+              applications={applications}
+              onEdit={setEditing}
+              onSaved={handleSaved}
+            />
+          )}
         </div>
       </main>
 
@@ -118,5 +132,37 @@ export function DashboardView({ email }: DashboardViewProps) {
         application={editing ?? undefined}
       />
     </>
+  );
+}
+
+function ViewTabs({
+  view,
+  onChange,
+}: {
+  view: View;
+  onChange: (v: View) => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Application view"
+      className="mb-4 inline-flex rounded-md border border-border-subtle bg-bg-elevated p-1"
+    >
+      {(["table", "kanban"] as const).map((v) => (
+        <button
+          key={v}
+          role="tab"
+          aria-selected={view === v}
+          onClick={() => onChange(v)}
+          className={`rounded px-3 py-1 text-sm font-medium capitalize transition-colors ${
+            view === v
+              ? "bg-brand-500 text-white"
+              : "text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          {v}
+        </button>
+      ))}
+    </div>
   );
 }

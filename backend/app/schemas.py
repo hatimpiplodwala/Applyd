@@ -32,6 +32,7 @@ class ApplicationBase(BaseModel):
     salary_range: str | None = None
     contact_name: str | None = None
     notes: str | None = None
+    follow_up_date: date | None = None
 
     _validate_job_url = field_validator("job_url")(_validate_http_url)
 
@@ -50,6 +51,7 @@ class ApplicationUpdate(BaseModel):
     salary_range: str | None = None
     contact_name: str | None = None
     notes: str | None = None
+    follow_up_date: date | None = None
 
     _validate_job_url = field_validator("job_url")(_validate_http_url)
 

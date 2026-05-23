@@ -23,6 +23,7 @@ interface FormState {
   salary_range: string;
   contact_name: string;
   notes: string;
+  follow_up_date: string;
 }
 
 function todayIso(): string {
@@ -40,6 +41,7 @@ function initialState(app?: Application): FormState {
     salary_range: app?.salary_range ?? "",
     contact_name: app?.contact_name ?? "",
     notes: app?.notes ?? "",
+    follow_up_date: app?.follow_up_date ?? "",
   };
 }
 
@@ -58,6 +60,11 @@ export function ApplicationFormDialog({
   const [forceSubmit, setForceSubmit] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [parseMode, setParseMode] = useState<"url" | "text">("url");
+  const [parseUrl, setParseUrl] = useState("");
+  const [parseText, setParseText] = useState("");
+  const [parsing, setParsing] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -66,8 +73,43 @@ export function ApplicationFormDialog({
       setDuplicateWarning(false);
       setForceSubmit(false);
       setConfirmDelete(false);
+      setParseMode("url");
+      setParseUrl("");
+      setParseText("");
+      setParseError(null);
     }
   }, [open, application]);
+
+  async function handleAutofill() {
+    const url = parseUrl.trim();
+    const text = parseText.trim();
+    if (parseMode === "url" && !url) return;
+    if (parseMode === "text" && !text) return;
+    setParseError(null);
+    setParsing(true);
+    try {
+      const parsed =
+        parseMode === "url"
+          ? await api.parseJob({ url })
+          : await api.parseJob({ text });
+      setForm((f) => ({
+        ...f,
+        company: parsed.company ?? f.company,
+        role: parsed.role ?? f.role,
+        location: parsed.location ?? f.location,
+        salary_range: parsed.salary_range ?? f.salary_range,
+        job_url:
+          parsed.job_url ?? (parseMode === "url" ? url : f.job_url) ?? f.job_url,
+      }));
+      // Company/role likely changed → re-run duplicate check on save.
+      setDuplicateWarning(false);
+      setForceSubmit(false);
+    } catch (e) {
+      setParseError(e instanceof Error ? e.message : "Failed to parse");
+    } finally {
+      setParsing(false);
+    }
+  }
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -88,6 +130,7 @@ export function ApplicationFormDialog({
       salary_range: form.salary_range.trim() || null,
       contact_name: form.contact_name.trim() || null,
       notes: form.notes.trim() || null,
+      follow_up_date: form.follow_up_date || null,
     };
   }
 
@@ -171,6 +214,94 @@ export function ApplicationFormDialog({
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {!isEdit && (
+          <div className="rounded-md border border-border-subtle bg-bg-elevated/60 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-text-secondary">
+                Auto-fill from URL or pasted text
+              </span>
+              <div
+                role="tablist"
+                aria-label="Auto-fill source"
+                className="inline-flex rounded border border-border-subtle bg-bg-base p-0.5 text-xs"
+              >
+                {(["url", "text"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    role="tab"
+                    aria-selected={parseMode === m}
+                    onClick={() => {
+                      setParseMode(m);
+                      setParseError(null);
+                    }}
+                    className={`rounded px-2 py-0.5 font-medium transition-colors ${
+                      parseMode === m
+                        ? "bg-brand-500 text-white"
+                        : "text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {m === "url" ? "URL" : "Text"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {parseMode === "url" ? (
+              <div className="flex gap-2">
+                <input
+                  id="parse_url"
+                  type="url"
+                  value={parseUrl}
+                  onChange={(e) => setParseUrl(e.target.value)}
+                  placeholder="https://…"
+                  className="input-base flex-1"
+                  disabled={parsing}
+                />
+                <button
+                  type="button"
+                  onClick={handleAutofill}
+                  disabled={parsing || !parseUrl.trim()}
+                  className="btn-secondary whitespace-nowrap"
+                >
+                  {parsing ? "Parsing…" : "Auto-fill"}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <textarea
+                  id="parse_text"
+                  value={parseText}
+                  onChange={(e) => setParseText(e.target.value)}
+                  placeholder="Paste the job description here…"
+                  rows={5}
+                  className="input-base w-full resize-y"
+                  disabled={parsing}
+                />
+                <button
+                  type="button"
+                  onClick={handleAutofill}
+                  disabled={parsing || !parseText.trim()}
+                  className="btn-secondary"
+                >
+                  {parsing ? "Parsing…" : "Auto-fill"}
+                </button>
+              </div>
+            )}
+
+            {parseError && (
+              <p className="mt-2 text-xs text-status-rejected-text">
+                {parseError}
+              </p>
+            )}
+            <p className="mt-2 text-[11px] text-text-muted">
+              {parseMode === "url"
+                ? "Works on direct company career pages (Greenhouse, Lever, Ashby). LinkedIn and Indeed block scrapers — use Text instead."
+                : "Paste anything — full posting, snippet, or a single paragraph. Gemini extracts what it can."}
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Company *" htmlFor="company">
             <input
@@ -213,6 +344,16 @@ export function ApplicationFormDialog({
               required
               value={form.date_applied}
               onChange={(e) => update("date_applied", e.target.value)}
+              className="input-base"
+            />
+          </Field>
+
+          <Field label="Follow-up date" htmlFor="follow_up_date">
+            <input
+              id="follow_up_date"
+              type="date"
+              value={form.follow_up_date}
+              onChange={(e) => update("follow_up_date", e.target.value)}
               className="input-base"
             />
           </Field>

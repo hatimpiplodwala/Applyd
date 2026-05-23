@@ -167,7 +167,10 @@ function SortableHeader({
 function Row({ app, onEdit }: { app: Application; onEdit: () => void }) {
   return (
     <tr className="group border-b border-border-subtle last:border-0 hover:bg-bg-hover">
-      <td className="px-4 py-3 font-medium text-text-primary">{app.company}</td>
+      <td className="px-4 py-3 font-medium text-text-primary">
+        <div>{app.company}</div>
+        {app.follow_up_date && <FollowUpBadge date={app.follow_up_date} />}
+      </td>
       <td className="px-4 py-3 text-text-secondary">{app.role}</td>
       <td className="px-4 py-3">
         <StatusBadge status={app.status} />
@@ -240,4 +243,34 @@ function formatDate(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function FollowUpBadge({ date }: { date: string }) {
+  const days = daysUntil(date);
+  const overdue = days < 0;
+  const soon = days >= 0 && days <= 2;
+  const cls = overdue
+    ? "border-status-rejected-border bg-status-rejected-bg text-status-rejected-text"
+    : soon
+    ? "border-status-screen-border bg-status-screen-bg text-status-screen-text"
+    : "border-border-subtle bg-bg-elevated text-text-muted";
+  const label = overdue
+    ? `Follow up overdue ${Math.abs(days)}d`
+    : days === 0
+    ? "Follow up today"
+    : `Follow up in ${days}d`;
+  return (
+    <span
+      className={`mt-1 inline-block rounded border px-1.5 py-0.5 text-[10px] font-normal ${cls}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+function daysUntil(iso: string): number {
+  const target = new Date(iso + "T00:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
