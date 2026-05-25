@@ -44,7 +44,13 @@ interface FormState {
 }
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  // Local date components — toISOString uses UTC, which can land on the next
+  // day for late-evening users in negative-UTC zones.
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function initialState(app?: Application): FormState {

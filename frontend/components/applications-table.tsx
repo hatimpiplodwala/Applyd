@@ -284,11 +284,10 @@ function SkeletonRows() {
 }
 
 function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString("en-CA");
-  } catch {
-    return iso;
-  }
+  // Postgres `date` arrives as YYYY-MM-DD. Parsing via new Date() treats it
+  // as UTC midnight and toLocaleDateString shifts to local — landing on the
+  // previous day in negative-UTC zones. Slice the string instead.
+  return /^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0, 10) : iso;
 }
 
 function FollowUpBadge({ date }: { date: string }) {

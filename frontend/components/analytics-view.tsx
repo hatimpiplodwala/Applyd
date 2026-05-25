@@ -59,8 +59,10 @@ export function AnalyticsView({ applications }: AnalyticsViewProps) {
     };
     for (const app of applications) {
       const ord = STAGE_ORDER[app.status];
-      if (ord < 0) continue;
-      for (let i = 0; i <= ord; i++) {
+      // Rejected/Withdrawn (ord < 0) still applied at minimum — count them
+      // in Applied. We don't know if they reached later stages.
+      const reachedTo = ord < 0 ? 0 : ord;
+      for (let i = 0; i <= reachedTo; i++) {
         totals[PIPELINE[i]]++;
       }
     }
@@ -240,8 +242,9 @@ export function AnalyticsView({ applications }: AnalyticsViewProps) {
               })}
             </div>
             <p className="mt-4 text-[11px] text-ink-soft">
-              Each stage counts apps currently at or beyond it. Rejected and
-              withdrawn apps live in <span className="text-ink-mid">Outcomes</span>, not here.
+              Applied counts every application. Later stages count apps that
+              reached them and weren&apos;t rejected or withdrawn — see{" "}
+              <span className="text-ink-mid">Outcomes</span> for those.
             </p>
           </CardContent>
         </Card>
@@ -317,7 +320,7 @@ export function AnalyticsView({ applications }: AnalyticsViewProps) {
             </h3>
             <p className="text-[11px] text-ink-soft">Last 6 months</p>
           </header>
-          <div className="flex h-40 items-end gap-2">
+          <div className="flex h-40 items-stretch gap-2">
             {monthly.map((m, i) => {
               const height = (m.count / monthlyMax) * 100;
               const prevYear = i > 0 ? monthly[i - 1].year : m.year;
@@ -325,7 +328,7 @@ export function AnalyticsView({ applications }: AnalyticsViewProps) {
               return (
                 <div
                   key={m.key}
-                  className="group flex flex-1 flex-col items-center gap-1"
+                  className="group flex h-full flex-1 flex-col items-center gap-1"
                   title={`${m.fullLabel}: ${m.count} ${
                     m.count === 1 ? "application" : "applications"
                   }`}
