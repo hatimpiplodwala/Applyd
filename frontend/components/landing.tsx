@@ -1,20 +1,11 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BarChart3,
-  Bell,
-  Briefcase,
-  Columns3,
-  LogIn,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { BrandMark } from "@/components/brand";
+import { Button } from "@/components/ui/button";
 
 export function Landing() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-bg-base text-text-primary">
-      <AmbientGlow />
+    <div className="relative min-h-screen overflow-hidden">
       <TopNav />
       <main className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <Hero />
@@ -26,19 +17,6 @@ export function Landing() {
   );
 }
 
-function AmbientGlow() {
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-0 overflow-hidden"
-    >
-      <div className="absolute -top-40 left-1/2 h-[600px] w-[1100px] -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl" />
-      <div className="absolute -bottom-32 -left-32 h-[500px] w-[500px] rounded-full bg-brand-700/15 blur-3xl" />
-      <div className="absolute -right-40 top-60 h-[400px] w-[400px] rounded-full bg-brand-500/10 blur-3xl" />
-    </div>
-  );
-}
-
 function TopNav() {
   return (
     <header className="relative z-10">
@@ -46,21 +24,19 @@ function TopNav() {
         <Link href="/" className="flex items-center gap-2.5">
           <BrandMark size="md" />
           <div className="flex flex-col">
-            <span className="text-sm font-semibold tracking-tight">Applyd</span>
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">
-              Job tracker
+            <span className="font-serif text-base font-medium tracking-tight">
+              Applyd
             </span>
+            <span className="eyebrow">Job tracker</span>
           </div>
         </Link>
         <nav className="flex items-center gap-2">
-          <Link href="/login" className="btn-ghost">
-            <LogIn className="h-4 w-4" />
-            <span className="hidden sm:inline">Log in</span>
-          </Link>
-          <Link href="/signup" className="btn-primary">
-            Get started
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/login">Log in</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/signup">Get started</Link>
+          </Button>
         </nav>
       </div>
     </header>
@@ -69,39 +45,32 @@ function TopNav() {
 
 function Hero() {
   return (
-    <section className="relative pt-16 pb-24 sm:pt-24 sm:pb-32">
+    <section className="relative pt-20 pb-24 sm:pt-28 sm:pb-32">
       <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-700/40 bg-brand-700/10 px-3 py-1 text-xs font-medium text-brand-400 shadow-glow-brand-soft">
-          <Sparkles className="h-3 w-3" />
-          Built for the modern job hunt
-        </span>
-        <h1 className="mt-6 text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          Track every application.{" "}
-          <span className="bg-gradient-to-b from-brand-400 to-brand-600 bg-clip-text text-transparent">
-            Never lose a thread.
-          </span>
+        <h1 className="text-balance font-serif text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+          Track every application in one place.
         </h1>
-        <p className="mt-6 text-balance text-base text-text-secondary sm:text-lg">
-          A polished, focused workspace for the chaos of job searching.
-          Pipeline, kanban, analytics, and follow-up reminders &mdash; in one
-          place that actually feels good to open.
+        <p className="mt-6 max-w-xl text-balance text-base leading-relaxed text-ink-mid sm:text-lg">
+          Pipeline, kanban, analytics, and follow-up reminders for your job
+          search.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link href="/signup" className="btn-primary px-5 py-2.5 text-base">
-            Start tracking free
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link href="/login" className="btn-secondary px-5 py-2.5 text-base">
-            <LogIn className="h-4 w-4" />
-            Sign in
-          </Link>
+          <Button size="lg" asChild>
+            <Link href="/signup">
+              Get started
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Button size="lg" variant="secondary" asChild>
+            <Link href="/login">Sign in</Link>
+          </Button>
         </div>
       </div>
 
-      <div className="relative mt-16 sm:mt-20">
+      <div className="relative mt-20">
         <div
           aria-hidden
-          className="absolute -inset-x-12 -top-12 bottom-0 -z-10 bg-gradient-to-b from-brand-500/10 to-transparent blur-2xl"
+          className="pointer-events-none absolute -inset-x-12 -top-8 bottom-0 -z-10 bg-gradient-to-b from-primary/5 to-transparent blur-2xl"
         />
         <HeroPreview />
       </div>
@@ -111,41 +80,46 @@ function Hero() {
 
 function HeroPreview() {
   return (
-    <div className="relative mx-auto max-w-5xl rounded-xl border border-border-subtle bg-gloss-surface p-2 shadow-card-elevated">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
-      />
-      <div className="grid grid-cols-12 gap-2">
-        {/* Mock sidebar */}
-        <div className="col-span-3 hidden flex-col rounded-lg bg-gloss-sidebar p-3 shadow-sidebar sm:flex">
+    <div className="paper-shine relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-border bg-surface-raised p-2 shadow-paper-hover">
+      <div className="flex gap-2">
+        {/* Sidebar — matches stats-sidebar.tsx */}
+        <aside className="hidden w-44 flex-shrink-0 flex-col rounded-xl border border-border bg-gloss-paper p-3 shadow-paper sm:flex">
           <div className="flex items-center gap-2">
             <BrandMark size="sm" />
-            <span className="text-xs font-semibold">Applyd</span>
+            <div className="flex flex-col">
+              <span className="font-serif text-xs font-medium leading-tight">
+                Applyd
+              </span>
+              <span className="text-[7px] font-medium uppercase tracking-[0.12em] text-ink-soft">
+                Job tracker
+              </span>
+            </div>
           </div>
-          <div className="divider-gradient mt-3" />
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="divider-soft mt-3" />
+          <div className="mt-3 grid grid-cols-2 gap-1.5">
             <MiniStat label="Total" value="24" />
             <MiniStat label="Active" value="11" accent />
           </div>
-          <div className="mt-3 rounded-md border border-border-subtle bg-gloss-elevated p-2 shadow-card">
-            <p className="text-[9px] font-medium uppercase tracking-wider text-text-muted">
+          <div className="paper-shine mt-2.5 rounded-md border border-border bg-surface-raised p-2 shadow-paper-raised">
+            <p className="text-[7px] font-medium uppercase tracking-[0.12em] text-ink-soft">
               Last 14 days
             </p>
-            <p className="mt-0.5 text-base font-semibold">7</p>
+            <p className="mt-0.5 font-serif text-sm font-semibold tabular-nums">
+              7
+            </p>
             <div className="mt-1.5 flex h-6 items-end gap-[2px]">
               {[2, 1, 3, 0, 4, 2, 5, 1, 3, 2, 4, 6, 3, 5].map((n, i) => {
                 const isToday = i === 13;
-                const h = Math.max(15, (n / 6) * 100);
+                const h = n === 0 ? 10 : Math.max(20, (n / 6) * 100);
                 return (
                   <div
                     key={i}
-                    className={`flex-1 rounded-[1px] ${
+                    className={`flex-1 rounded-[2px] ${
                       isToday
-                        ? "bg-gradient-to-t from-brand-500 to-brand-400 shadow-glow-brand-soft"
+                        ? "bg-primary shadow-forest-glow"
                         : i >= 7
-                        ? "bg-gradient-to-t from-brand-600 to-brand-500/80"
-                        : "bg-bg-hover"
+                        ? "bg-gloss-forest"
+                        : "bg-surface-sunken"
                     }`}
                     style={{ height: `${h}%` }}
                   />
@@ -153,58 +127,91 @@ function HeroPreview() {
               })}
             </div>
           </div>
-        </div>
+          <div className="divider-soft mt-3" />
+          <div className="mt-3 space-y-2">
+            <SidebarGroup
+              label="Active"
+              rows={[
+                { name: "Applied", dot: "bg-status-applied-dot", n: 8 },
+                { name: "Phone Screen", dot: "bg-status-screen-dot", n: 3 },
+                { name: "Interview", dot: "bg-status-interview-dot", n: 0 },
+              ]}
+            />
+          </div>
+        </aside>
 
-        {/* Mock main content */}
-        <div className="col-span-12 flex flex-col gap-2 sm:col-span-9">
-          <div className="flex items-center justify-between rounded-md border border-border-subtle bg-bg-deep p-1 shadow-inner-deep">
-            <div className="flex gap-1">
-              <div className="rounded bg-gloss-tab-active px-2 py-1 text-[10px] font-medium text-white shadow-tab-active">
-                Table
-              </div>
-              <div className="rounded px-2 py-1 text-[10px] text-text-muted">
-                Kanban
-              </div>
-              <div className="rounded px-2 py-1 text-[10px] text-text-muted">
-                Analytics
-              </div>
+        {/* Main — matches dashboard-view.tsx */}
+        <div className="min-w-0 flex-1 px-1 pt-1">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[7px] font-medium uppercase tracking-[0.12em] text-ink-soft">
+                Dashboard
+              </p>
+              <h3 className="mt-0.5 font-serif text-base font-medium tracking-tight text-foreground sm:text-lg">
+                Applications
+              </h3>
+              <p className="mt-0.5 text-[9px] text-ink-mid">
+                Track everywhere you&apos;ve applied.
+              </p>
             </div>
-            <div className="hidden gap-1 sm:flex">
-              <div className="rounded border border-border-subtle bg-gloss-surface px-2 py-1 text-[10px]">
+            <div className="flex gap-1">
+              <div className="paper-shine rounded-md border border-border bg-surface-raised px-2 py-1 text-[9px] font-medium shadow-paper-raised">
                 Export
               </div>
-              <div className="rounded bg-gloss-brand px-2 py-1 text-[10px] text-white shadow-btn-primary">
+              <div className="rounded-md bg-gloss-forest px-2 py-1 text-[9px] font-medium text-primary-foreground shadow-forest-button">
                 + Add
               </div>
             </div>
           </div>
-          <div className="overflow-hidden rounded-md border border-border-subtle bg-gloss-surface shadow-card">
-            <div className="grid grid-cols-12 gap-2 border-b border-border-subtle px-3 py-1.5 text-[9px] font-medium uppercase tracking-wider text-text-muted">
-              <span className="col-span-3">Company</span>
+
+          <div className="mt-2 inline-flex items-center gap-0.5 rounded-md border border-border bg-surface-sunken/60 p-0.5 shadow-inner-paper">
+            <div className="paper-shine rounded bg-surface-raised px-2 py-0.5 text-[9px] font-medium shadow-paper-raised">
+              Table
+            </div>
+            <div className="rounded px-2 py-0.5 text-[9px] text-ink-soft">
+              Kanban
+            </div>
+            <div className="rounded px-2 py-0.5 text-[9px] text-ink-soft">
+              Analytics
+            </div>
+          </div>
+
+          <div className="mt-2 flex gap-1.5">
+            <div className="flex w-32 items-center gap-1 rounded-md border border-input bg-surface-raised px-2 py-1 text-[9px] text-ink-soft shadow-inner-paper">
+              All statuses
+            </div>
+            <div className="flex flex-1 items-center gap-1 rounded-md border border-input bg-surface-raised px-2 py-1 text-[9px] text-ink-soft shadow-inner-paper">
+              Search company or role…
+            </div>
+          </div>
+
+          <div className="paper-shine relative mt-2 overflow-hidden rounded-lg border border-border bg-card shadow-paper-raised">
+            <div className="grid grid-cols-12 gap-1 border-b border-border bg-surface-sunken/60 px-3 py-1.5 text-[8px] font-medium uppercase tracking-[0.1em] text-ink-soft">
+              <span className="col-span-4">Company</span>
               <span className="col-span-4">Role</span>
               <span className="col-span-2">Status</span>
-              <span className="col-span-3">Applied</span>
+              <span className="col-span-2">Applied</span>
             </div>
             {SAMPLE_ROWS.map((row, i) => (
               <div
                 key={i}
-                className="grid grid-cols-12 gap-2 border-b border-border-subtle/50 px-3 py-2 text-[11px] last:border-0"
+                className={`relative grid grid-cols-12 items-center gap-1 border-b border-border/60 px-3 py-2 pl-4 text-[10px] last:border-0 before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:opacity-70 ${row.accentCls}`}
               >
-                <span className="col-span-3 truncate font-medium text-text-primary">
+                <span className="col-span-4 truncate font-medium text-foreground">
                   {row.company}
                 </span>
-                <span className="col-span-4 truncate text-text-secondary">
+                <span className="col-span-4 truncate text-ink-mid">
                   {row.role}
                 </span>
                 <span className="col-span-2">
                   <span
-                    className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] ${row.statusCls}`}
+                    className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[8px] ${row.statusCls}`}
                   >
                     <span className={`h-1 w-1 rounded-full ${row.dotCls}`} />
                     {row.status}
                   </span>
                 </span>
-                <span className="col-span-3 tabular-nums text-text-muted">
+                <span className="col-span-2 tabular-nums text-ink-soft">
                   {row.date}
                 </span>
               </div>
@@ -227,20 +234,60 @@ function MiniStat({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-md border px-2 py-1.5 ${
+      className={`paper-shine relative overflow-hidden rounded-md border px-1.5 py-1 ${
         accent
-          ? "border-brand-700/60 bg-gloss-hero shadow-card-elevated"
-          : "border-border-subtle bg-gloss-elevated shadow-card"
+          ? "border-primary/40 bg-gloss-forest text-primary-foreground shadow-forest-button"
+          : "border-border bg-surface-raised shadow-paper"
       }`}
     >
       <p
-        className={`text-[8px] font-medium uppercase tracking-wider ${
-          accent ? "text-brand-400" : "text-text-muted"
+        className={`text-[7px] font-medium uppercase tracking-[0.1em] ${
+          accent ? "text-primary-foreground/80" : "text-ink-soft"
         }`}
       >
         {label}
       </p>
-      <p className="text-sm font-semibold tabular-nums">{value}</p>
+      <p
+        className={`font-serif text-sm font-semibold tabular-nums ${
+          accent ? "text-primary-foreground" : "text-foreground"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function SidebarGroup({
+  label,
+  rows,
+}: {
+  label: string;
+  rows: { name: string; dot: string; n: number }[];
+}) {
+  const subtotal = rows.reduce((s, r) => s + r.n, 0);
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <p className="text-[7px] font-medium uppercase tracking-[0.12em] text-ink-soft">
+          {label}
+        </p>
+        <span className="text-[8px] tabular-nums text-ink-soft">{subtotal}</span>
+      </div>
+      <ul className="mt-1 space-y-0.5">
+        {rows.map((r) => (
+          <li
+            key={r.name}
+            className="flex items-center justify-between px-1 text-[9px]"
+          >
+            <span className="flex items-center gap-1.5 text-ink-mid">
+              <span className={`h-1.5 w-1.5 rounded-full ${r.dot}`} />
+              {r.name}
+            </span>
+            <span className="tabular-nums text-ink-soft">{r.n}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -251,8 +298,9 @@ const SAMPLE_ROWS = [
     role: "Senior Frontend Engineer",
     status: "Interview",
     statusCls:
-      "border-status-interview-border bg-status-interview-bg text-status-interview-text",
+      "border-status-interview-border bg-status-interview-bg text-status-interview-fg",
     dotCls: "bg-status-interview-dot",
+    accentCls: "before:bg-status-interview-dot",
     date: "May 18",
   },
   {
@@ -260,8 +308,9 @@ const SAMPLE_ROWS = [
     role: "Product Engineer",
     status: "Phone Screen",
     statusCls:
-      "border-status-screen-border bg-status-screen-bg text-status-screen-text",
+      "border-status-screen-border bg-status-screen-bg text-status-screen-fg",
     dotCls: "bg-status-screen-dot",
+    accentCls: "before:bg-status-screen-dot",
     date: "May 14",
   },
   {
@@ -269,17 +318,18 @@ const SAMPLE_ROWS = [
     role: "Software Engineer, ML",
     status: "Applied",
     statusCls:
-      "border-status-applied-border bg-status-applied-bg text-status-applied-text",
+      "border-status-applied-border bg-status-applied-bg text-status-applied-fg",
     dotCls: "bg-status-applied-dot",
+    accentCls: "before:bg-status-applied-dot",
     date: "May 11",
   },
   {
     company: "Stripe",
     role: "Full-Stack Engineer",
     status: "Offer",
-    statusCls:
-      "border-status-offer-border bg-status-offer-bg text-status-offer-text",
+    statusCls: "border-status-offer-border bg-status-offer-bg text-status-offer-fg",
     dotCls: "bg-status-offer-dot",
+    accentCls: "before:bg-status-offer-dot",
     date: "May 4",
   },
 ];
@@ -288,33 +338,26 @@ function Features() {
   return (
     <section className="relative py-20 sm:py-28">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="eyebrow">Why Applyd</p>
-        <h2 className="mt-2 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-          Everything you need. Nothing in the way.
+        <p className="eyebrow">Features</p>
+        <h2 className="mt-2 text-balance font-serif text-3xl font-medium leading-tight tracking-tight sm:text-4xl">
+          Built for tracking a job search.
         </h2>
-        <p className="mt-4 text-text-secondary">
-          Designed by someone who got tired of spreadsheets and over-engineered
-          ATS clones.
-        </p>
       </div>
 
       <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-3">
         <FeatureCard
-          icon={<Columns3 className="h-5 w-5" />}
           title="Drag-and-drop kanban"
-          body="Move applications across stages with a flick. Optimistic updates keep things instant — no waiting on the network."
+          body="Move applications across stages. Updates are optimistic so the board feels instant."
           preview={<KanbanPreview />}
         />
         <FeatureCard
-          icon={<BarChart3 className="h-5 w-5" />}
           title="Pipeline analytics"
-          body="See conversion from Applied through Offer, monthly velocity, and outcomes — separated so terminal states don't muddy your pipeline."
+          body="Conversion from Applied through Offer, monthly volume, and outcomes split out from the active pipeline."
           preview={<FunnelPreview />}
         />
         <FeatureCard
-          icon={<Bell className="h-5 w-5" />}
           title="Follow-up reminders"
-          body="Set a follow-up date when you apply. Email nudges keep stale applications from disappearing into the void."
+          body="Set a follow-up date when you apply. Email reminders go out the morning of."
           preview={<ReminderPreview />}
         />
       </div>
@@ -323,29 +366,18 @@ function Features() {
 }
 
 function FeatureCard({
-  icon,
   title,
   body,
   preview,
 }: {
-  icon: React.ReactNode;
   title: string;
   body: string;
   preview: React.ReactNode;
 }) {
   return (
-    <div className="card flex flex-col p-5">
-      <div className="flex items-center gap-2.5">
-        <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-md border border-brand-700/50 bg-gloss-hero text-brand-400 shadow-inner-highlight">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/40 to-transparent"
-          />
-          {icon}
-        </div>
-        <h3 className="text-base font-semibold text-text-primary">{title}</h3>
-      </div>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">{body}</p>
+    <div className="paper-shine flex flex-col rounded-xl border border-border bg-surface-raised p-5 shadow-paper-raised transition-shadow hover:shadow-paper-hover">
+      <h3 className="font-serif text-lg font-medium text-ink">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-ink-mid">{body}</p>
       <div className="mt-5 flex-1">{preview}</div>
     </div>
   );
@@ -362,25 +394,25 @@ function KanbanPreview() {
       {cols.map((c) => (
         <div
           key={c.name}
-          className="rounded-md border border-border-subtle bg-bg-elevated/60 p-1.5"
+          className="rounded-md border border-border bg-surface p-1.5"
         >
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1 text-[9px] font-medium text-text-secondary">
+            <span className="flex items-center gap-1 text-[9px] font-medium text-ink-mid">
               <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
               {c.name}
             </span>
-            <span className="text-[9px] tabular-nums text-text-muted">
+            <span className="text-[9px] tabular-nums text-ink-soft">
               {c.count}
             </span>
           </div>
           <div className="mt-1.5 space-y-1">
-            <div className="rounded border border-border-subtle bg-gloss-surface px-1.5 py-1 shadow-card">
-              <div className="h-1 w-3/4 rounded bg-bg-hover" />
-              <div className="mt-1 h-1 w-1/2 rounded bg-bg-hover/60" />
+            <div className="paper-shine rounded border border-border bg-surface-raised px-1.5 py-1 shadow-paper">
+              <div className="h-1 w-3/4 rounded bg-surface-sunken" />
+              <div className="mt-1 h-1 w-1/2 rounded bg-surface-sunken/70" />
             </div>
-            <div className="rounded border border-border-subtle bg-gloss-surface px-1.5 py-1 shadow-card">
-              <div className="h-1 w-2/3 rounded bg-bg-hover" />
-              <div className="mt-1 h-1 w-2/5 rounded bg-bg-hover/60" />
+            <div className="paper-shine rounded border border-border bg-surface-raised px-1.5 py-1 shadow-paper">
+              <div className="h-1 w-2/3 rounded bg-surface-sunken" />
+              <div className="mt-1 h-1 w-2/5 rounded bg-surface-sunken/70" />
             </div>
           </div>
         </div>
@@ -400,19 +432,14 @@ function FunnelPreview() {
     <div className="space-y-1.5">
       {stages.map((s) => (
         <div key={s.label} className="flex items-center gap-2">
-          <span className="w-14 text-[9px] text-text-muted">{s.label}</span>
-          <div className="relative h-3 flex-1 overflow-hidden rounded bg-bg-deep shadow-inner-deep">
+          <span className="w-14 text-[9px] text-ink-soft">{s.label}</span>
+          <div className="relative h-3 flex-1 overflow-hidden rounded bg-surface-sunken shadow-inner-paper">
             <div
-              className="relative h-full rounded bg-gradient-to-r from-brand-700 via-brand-500 to-brand-400 shadow-inner-highlight"
+              className="paper-shine relative h-full rounded bg-gloss-forest"
               style={{ width: `${s.pct}%` }}
-            >
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"
-              />
-            </div>
+            />
           </div>
-          <span className="w-4 text-right text-[9px] tabular-nums text-text-secondary">
+          <span className="w-4 text-right text-[9px] tabular-nums text-ink-mid">
             {s.n}
           </span>
         </div>
@@ -424,26 +451,21 @@ function FunnelPreview() {
 function ReminderPreview() {
   return (
     <div className="space-y-2">
-      <div className="rounded-md border border-status-screen-border bg-status-screen-bg/60 p-2.5 shadow-card">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-medium text-status-screen-text">
-            Follow up today
-          </span>
-          <Bell className="h-3 w-3 text-status-screen-text" />
-        </div>
-        <p className="mt-1 text-[11px] font-medium text-text-primary">
+      <div className="paper-shine rounded-md border border-status-screen-border bg-status-screen-bg/60 p-2.5">
+        <span className="text-[10px] font-medium text-status-screen-fg">
+          Follow up today
+        </span>
+        <p className="mt-1 text-[11px] font-medium text-ink">
           Vercel &middot; Senior Frontend Engineer
         </p>
-        <p className="text-[10px] text-text-muted">Applied 5 days ago</p>
+        <p className="text-[10px] text-ink-soft">Applied 5 days ago</p>
       </div>
-      <div className="rounded-md border border-border-subtle bg-gloss-elevated p-2.5">
+      <div className="rounded-md border border-border bg-surface p-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-text-muted">In 3 days</span>
-          <span className="text-[10px] tabular-nums text-text-muted">
-            May 26
-          </span>
+          <span className="text-[10px] text-ink-soft">In 3 days</span>
+          <span className="text-[10px] tabular-nums text-ink-soft">May 26</span>
         </div>
-        <p className="mt-1 text-[11px] text-text-secondary">
+        <p className="mt-1 text-[11px] text-ink-mid">
           Linear &middot; Product Engineer
         </p>
       </div>
@@ -454,33 +476,28 @@ function ReminderPreview() {
 function CallToAction() {
   return (
     <section className="relative pb-24 sm:pb-32">
-      <div className="relative overflow-hidden rounded-2xl border border-brand-700/40 bg-gloss-hero p-8 text-center shadow-card-elevated sm:p-14">
+      <div className="paper-shine relative overflow-hidden rounded-2xl border border-border bg-gloss-cream p-8 text-center shadow-paper-hover sm:p-14">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/50 to-transparent"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-32 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-brand-600/25 blur-3xl"
+          className="pointer-events-none absolute -bottom-32 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
         />
         <div className="relative">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-md bg-gloss-brand shadow-brand-mark">
-            <TrendingUp className="h-5 w-5 text-white" />
-          </div>
-          <h2 className="mt-5 text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
-            Bring order to your job search.
+          <h2 className="text-balance font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+            Start tracking your applications.
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-text-secondary">
-            Free while in beta. No card, no nonsense.
+          <p className="mx-auto mt-3 max-w-md text-sm text-ink-mid">
+            Free to use. No credit card required.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/signup" className="btn-primary px-5 py-2.5 text-base">
-              Create your tracker
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/login" className="btn-ghost text-sm">
-              Already have an account? Sign in
-            </Link>
+            <Button size="lg" asChild>
+              <Link href="/signup">
+                Create an account
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/login">Already have an account? Sign in</Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -490,12 +507,9 @@ function CallToAction() {
 
 function Footer() {
   return (
-    <footer className="relative border-t border-border-subtle">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-text-muted sm:flex-row sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2">
-          <Briefcase className="h-3.5 w-3.5" />
-          <span>Applyd &middot; Built for job seekers who like clean tools.</span>
-        </div>
+    <footer className="relative border-t border-border">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-ink-soft sm:flex-row sm:px-6 lg:px-8">
+        <span>Applyd</span>
         <span>&copy; {new Date().getFullYear()} Applyd</span>
       </div>
     </footer>

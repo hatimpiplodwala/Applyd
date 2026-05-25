@@ -1,23 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BarChart3, Columns3, Download, Plus, Table2 } from "lucide-react";
 import { StatsSidebar } from "@/components/stats-sidebar";
 import { ApplicationsTable } from "@/components/applications-table";
 import { ApplicationFormDialog } from "@/components/application-form-dialog";
 import { KanbanBoard } from "@/components/kanban-board";
 import { AnalyticsView } from "@/components/analytics-view";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
 import type { Application } from "@/lib/types";
 
 type View = "table" | "kanban" | "analytics";
-
-const VIEW_META: Record<View, { label: string; icon: typeof Table2 }> = {
-  table: { label: "Table", icon: Table2 },
-  kanban: { label: "Kanban", icon: Columns3 },
-  analytics: { label: "Analytics", icon: BarChart3 },
-};
 
 interface DashboardViewProps {
   email: string;
@@ -26,20 +22,22 @@ interface DashboardViewProps {
 export function DashboardView({ email }: DashboardViewProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Application | null>(null);
   const [view, setView] = useState<View>("table");
+  const attemptRef = useRef(0);
 
   const load = useCallback(async () => {
-    setError(null);
     try {
       const data = await api.listApplications();
       setApplications(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load applications");
-    } finally {
+      attemptRef.current = 0;
       setLoading(false);
+    } catch {
+      attemptRef.current += 1;
+      // Exponential backoff, capped at 30s. Retry silently — no UI noise.
+      const delay = Math.min(30_000, 1_000 * 2 ** Math.min(attemptRef.current, 5));
+      setTimeout(load, delay);
     }
   }, []);
 
@@ -75,42 +73,53 @@ export function DashboardView({ email }: DashboardViewProps) {
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="eyebrow">Dashboard</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-text-primary">
+              <h2 className="mt-1 font-serif text-3xl font-medium tracking-tight text-foreground">
                 Applications
               </h2>
-              <p className="mt-1 text-sm text-text-secondary">
+              <p className="mt-1 text-sm text-ink-mid">
                 Track everywhere you&apos;ve applied.
               </p>
             </div>
             <div className="flex gap-2 sm:flex-shrink-0">
-              <button
+              <Button
+                variant="secondary"
                 onClick={handleExport}
                 disabled={applications.length === 0}
-                className="btn-secondary flex-1 sm:flex-none"
+                className="flex-1 sm:flex-none"
               >
                 <Download className="h-4 w-4" />
                 Export CSV
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setAddOpen(true)}
-                className="btn-primary flex-1 sm:flex-none"
+                className="flex-1 sm:flex-none"
               >
                 <Plus className="h-4 w-4" />
                 Add application
-              </button>
+              </Button>
             </div>
           </div>
 
-          {error && (
-            <div className="card mb-4 border-status-rejected-border p-4">
-              <p className="text-sm text-status-rejected-text">{error}</p>
-              <button onClick={load} className="btn-ghost mt-2">
-                Retry
-              </button>
-            </div>
-          )}
-
-          <ViewTabs view={view} onChange={setView} />
+          <Tabs
+            value={view}
+            onValueChange={(v) => setView(v as View)}
+            className="mb-4"
+          >
+            <TabsList aria-label="Application view">
+              <TabsTrigger value="table">
+                <Table2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Table</span>
+              </TabsTrigger>
+              <TabsTrigger value="kanban">
+                <Columns3 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Kanban</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics">
+                <BarChart3 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Analytics</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           <div key={view} className="animate-fade-in">
             {view === "table" && (
@@ -149,42 +158,5 @@ export function DashboardView({ email }: DashboardViewProps) {
         application={editing ?? undefined}
       />
     </>
-  );
-}
-
-function ViewTabs({
-  view,
-  onChange,
-}: {
-  view: View;
-  onChange: (v: View) => void;
-}) {
-  return (
-    <div
-      role="tablist"
-      aria-label="Application view"
-      className="mb-4 inline-flex rounded-md border border-border-subtle bg-bg-deep p-1 shadow-inner-deep"
-    >
-      {(["table", "kanban", "analytics"] as const).map((v) => {
-        const Icon = VIEW_META[v].icon;
-        const active = view === v;
-        return (
-          <button
-            key={v}
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(v)}
-            className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium transition-all ${
-              active
-                ? "bg-gloss-tab-active text-white shadow-tab-active"
-                : "text-text-secondary hover:bg-bg-hover hover:text-text-primary"
-            }`}
-          >
-            <Icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{VIEW_META[v].label}</span>
-          </button>
-        );
-      })}
-    </div>
   );
 }

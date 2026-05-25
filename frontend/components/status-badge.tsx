@@ -2,17 +2,17 @@ import type { Status } from "@/lib/types";
 
 const STYLES: Record<Status, string> = {
   Applied:
-    "bg-status-applied-bg text-status-applied-text border-status-applied-border",
+    "bg-status-applied-bg text-status-applied-fg border-status-applied-border",
   "Phone Screen":
-    "bg-status-screen-bg text-status-screen-text border-status-screen-border",
+    "bg-status-screen-bg text-status-screen-fg border-status-screen-border",
   Interview:
-    "bg-status-interview-bg text-status-interview-text border-status-interview-border",
+    "bg-status-interview-bg text-status-interview-fg border-status-interview-border",
   Offer:
-    "bg-status-offer-bg text-status-offer-text border-status-offer-border",
+    "bg-status-offer-bg text-status-offer-fg border-status-offer-border",
   Rejected:
-    "bg-status-rejected-bg text-status-rejected-text border-status-rejected-border",
+    "bg-status-rejected-bg text-status-rejected-fg border-status-rejected-border",
   Withdrawn:
-    "bg-status-withdrawn-bg text-status-withdrawn-text border-status-withdrawn-border",
+    "bg-status-withdrawn-bg text-status-withdrawn-fg border-status-withdrawn-border",
 };
 
 const DOTS: Record<Status, string> = {
@@ -27,7 +27,7 @@ const DOTS: Record<Status, string> = {
 export function StatusBadge({ status }: { status: Status }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${STYLES[status]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${STYLES[status]}`}
     >
       <span className={`dot ${DOTS[status]}`} aria-hidden />
       {status}

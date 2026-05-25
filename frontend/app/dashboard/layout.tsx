@@ -16,7 +16,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg-base md:flex-row">
+    <div className="flex min-h-screen flex-col md:flex-row">
       {children}
     </div>
   );

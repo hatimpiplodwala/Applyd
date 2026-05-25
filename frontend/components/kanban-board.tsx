@@ -13,7 +13,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Calendar, MapPin, MoveRight } from "lucide-react";
+import { AlertCircle, Calendar, MapPin, MoveRight } from "lucide-react";
 import { StatusDot } from "@/components/status-badge";
 import { api } from "@/lib/api";
 import { STATUSES, type Application, type Status } from "@/lib/types";
@@ -28,8 +28,6 @@ export function KanbanBoard({ applications, onEdit, onSaved }: KanbanBoardProps)
   const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Activation distance prevents click-vs-drag confusion: a tap that moves
-  // less than 6px counts as a click (opens edit) instead of starting a drag.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
@@ -66,7 +64,6 @@ export function KanbanBoard({ applications, onEdit, onSaved }: KanbanBoardProps)
     const app = applications.find((a) => a.id === id);
     if (!app || app.status === newStatus) return;
 
-    // Optimistic update via onSaved; revert by re-emitting original on error.
     onSaved({ ...app, status: newStatus });
     try {
       const updated = await api.updateApplication(id, { status: newStatus });
@@ -80,8 +77,9 @@ export function KanbanBoard({ applications, onEdit, onSaved }: KanbanBoardProps)
   return (
     <div className="space-y-3">
       {error && (
-        <div className="card border-status-rejected-border p-3 text-sm text-status-rejected-text">
-          {error}
+        <div className="flex items-start gap-2 rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm text-status-rejected-fg">
+          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
       <DndContext
@@ -123,9 +121,9 @@ function Column({
       <div className="mb-2 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <StatusDot status={status} />
-          <span className="text-sm font-medium text-text-primary">{status}</span>
+          <span className="text-sm font-medium text-foreground">{status}</span>
         </div>
-        <span className="rounded-full bg-bg-elevated px-2 py-0.5 text-xs font-medium tabular-nums text-text-muted">
+        <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-xs font-medium tabular-nums text-ink-soft">
           {apps.length}
         </span>
       </div>
@@ -133,14 +131,14 @@ function Column({
         ref={setNodeRef}
         className={`flex min-h-[200px] flex-col gap-2 rounded-lg border p-2 transition-all ${
           isOver
-            ? "border-brand-500 bg-brand-500/5 shadow-glow"
-            : "border-border-subtle bg-bg-elevated/40"
+            ? "border-primary bg-primary/5 shadow-forest-glow"
+            : "border-border bg-surface-sunken/40"
         }`}
       >
         {apps.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-border-subtle/60 px-2 py-6 text-center">
-            <MoveRight className="h-4 w-4 text-text-muted" />
-            <p className="text-xs text-text-muted">Drop here</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-border/60 px-2 py-6 text-center">
+            <MoveRight className="h-4 w-4 text-ink-soft" />
+            <p className="text-xs text-ink-soft">Drop here</p>
           </div>
         ) : (
           apps.map((app) => (
@@ -186,15 +184,15 @@ function DraggableCard({
 function Card({ app, dragging }: { app: Application; dragging?: boolean }) {
   return (
     <div
-      className={`card p-3 text-sm transition-all ${
+      className={`paper-shine relative rounded-lg border border-border bg-card p-3 text-sm transition-all ${
         dragging
-          ? "rotate-1 shadow-card-hover ring-2 ring-brand-500"
-          : "hover:border-border hover:bg-gloss-elevated hover:shadow-card-hover"
+          ? "rotate-1 shadow-paper-hover ring-2 ring-primary"
+          : "shadow-paper hover:shadow-paper-hover"
       }`}
     >
-      <div className="font-medium text-text-primary">{app.company}</div>
-      <div className="text-xs text-text-secondary">{app.role}</div>
-      <div className="mt-2 flex items-center justify-between text-[11px] text-text-muted">
+      <div className="font-medium text-foreground">{app.company}</div>
+      <div className="text-xs text-ink-mid">{app.role}</div>
+      <div className="mt-2 flex items-center justify-between text-[11px] text-ink-soft">
         <span className="inline-flex items-center gap-1 tabular-nums">
           <Calendar className="h-2.5 w-2.5" />
           {app.date_applied}
@@ -216,10 +214,10 @@ function CardFollowUp({ date }: { date: string }) {
   const overdue = days < 0;
   const soon = days >= 0 && days <= 2;
   const cls = overdue
-    ? "border-status-rejected-border bg-status-rejected-bg text-status-rejected-text"
+    ? "border-status-rejected-border bg-status-rejected-bg text-status-rejected-fg"
     : soon
-    ? "border-status-screen-border bg-status-screen-bg text-status-screen-text"
-    : "border-border-subtle bg-bg-elevated text-text-muted";
+    ? "border-status-screen-border bg-status-screen-bg text-status-screen-fg"
+    : "border-border bg-surface-sunken text-ink-soft";
   const label = overdue
     ? `Follow up overdue ${Math.abs(days)}d`
     : days === 0

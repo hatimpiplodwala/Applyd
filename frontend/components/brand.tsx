@@ -30,7 +30,7 @@ interface BrandMarkProps {
 const BOX_SIZES = {
   sm: "h-7 w-7",
   md: "h-9 w-9",
-  lg: "h-11 w-11",
+  lg: "h-12 w-12",
 };
 
 const ICON_SIZES = {
@@ -42,11 +42,11 @@ const ICON_SIZES = {
 export function BrandMark({ size = "sm" }: BrandMarkProps) {
   return (
     <div
-      className={`relative flex items-center justify-center overflow-hidden rounded-md bg-gloss-brand text-white shadow-brand-mark ${BOX_SIZES[size]}`}
+      className={`relative flex items-center justify-center overflow-hidden rounded-md bg-gloss-forest text-primary-foreground shadow-forest-button ${BOX_SIZES[size]}`}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/25 to-transparent"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/22 to-transparent"
         style={{ height: "50%" }}
       />
       <ChecklistIcon className={`relative ${ICON_SIZES[size]}`} />

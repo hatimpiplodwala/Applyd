@@ -4,108 +4,154 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    /* Parchment + forest palette — light, warm, earthy */
+    --background: 38 35% 92%;            /* #F2EDE3 warm parchment */
+    --foreground: 130 14% 13%;           /* #1F2520 ink */
+
+    --surface: 36 40% 96%;               /* #FBF7EF paper */
+    --surface-raised: 0 0% 100%;
+    --surface-sunken: 38 30% 88%;
+
+    --ink: 130 14% 13%;
+    --ink-mid: 130 6% 32%;
+    --ink-soft: 90 5% 55%;
+
+    --card: 36 40% 96%;
+    --card-foreground: 130 14% 13%;
+
+    --popover: 36 40% 98%;
+    --popover-foreground: 130 14% 13%;
+
+    --primary: 142 24% 24%;              /* #2F4A36 deep forest */
+    --primary-foreground: 36 40% 96%;
+
+    --secondary: 36 30% 88%;
+    --secondary-foreground: 130 14% 13%;
+
+    --muted: 36 25% 88%;
+    --muted-foreground: 90 5% 45%;
+
+    --accent: 30 30% 46%;                /* muted oak */
+    --accent-foreground: 36 40% 98%;
+
+    --destructive: 4 50% 42%;            /* brick */
+    --destructive-foreground: 36 40% 98%;
+
+    --border: 36 18% 78%;
+    --input: 36 18% 78%;
+    --ring: 142 24% 32%;
+
+    --radius: 0.75rem;
+
+    /* Status colors — desaturated, harmonized */
+    --status-applied-bg: 210 30% 92%;
+    --status-applied-fg: 210 35% 28%;
+    --status-applied-border: 210 25% 78%;
+    --status-applied-dot: 210 35% 45%;
+
+    --status-screen-bg: 35 50% 90%;
+    --status-screen-fg: 28 50% 30%;
+    --status-screen-border: 32 40% 72%;
+    --status-screen-dot: 30 55% 48%;
+
+    --status-interview-bg: 142 25% 88%;
+    --status-interview-fg: 142 30% 22%;
+    --status-interview-border: 142 22% 70%;
+    --status-interview-dot: 142 30% 38%;
+
+    --status-offer-bg: 80 30% 86%;
+    --status-offer-fg: 95 35% 22%;
+    --status-offer-border: 85 25% 68%;
+    --status-offer-dot: 95 35% 38%;
+
+    --status-rejected-bg: 8 45% 92%;
+    --status-rejected-fg: 4 45% 32%;
+    --status-rejected-border: 8 35% 78%;
+    --status-rejected-dot: 4 50% 48%;
+
+    --status-withdrawn-bg: 30 10% 88%;
+    --status-withdrawn-fg: 30 8% 35%;
+    --status-withdrawn-border: 30 8% 72%;
+    --status-withdrawn-dot: 30 6% 50%;
+
+    color-scheme: light;
+  }
+
+  * {
+    @apply border-border;
   }
 
   html,
   body {
-    background-color: #06080c;
-    color: #e6edf3;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Faint ambient brand glow at top-left of the viewport — gives the
-     page a "lit" feel without putting any element in focus. */
   body {
+    font-family: var(--font-sans), system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
     background-image:
       radial-gradient(
-        900px 500px at 0% 0%,
-        rgba(139, 92, 246, 0.06),
+        1200px 700px at 8% -5%,
+        rgba(207, 184, 142, 0.22),
         transparent 60%
       ),
       radial-gradient(
-        700px 400px at 100% 100%,
-        rgba(124, 58, 237, 0.04),
+        900px 600px at 95% 110%,
+        rgba(150, 175, 145, 0.18),
         transparent 60%
       );
     background-attachment: fixed;
   }
 
+  h1, h2, h3 {
+    font-family: var(--font-serif), Georgia, serif;
+    letter-spacing: -0.015em;
+  }
+
   *:focus-visible {
-    outline: 2px solid #8b5cf6;
-    outline-offset: 2px;
-    border-radius: 4px;
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25);
+    border-radius: calc(var(--radius) - 4px);
   }
 
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
-
   ::-webkit-scrollbar-track {
-    background: #06080c;
+    background: transparent;
   }
-
   ::-webkit-scrollbar-thumb {
-    background: #30363d;
+    background: hsl(var(--border));
     border-radius: 5px;
-    border: 2px solid #06080c;
+    border: 2px solid hsl(var(--background));
   }
-
   ::-webkit-scrollbar-thumb:hover {
-    background: #4b525c;
+    background: hsl(var(--ink-soft));
   }
 
-  /* Subtle selection color tied to brand */
   ::selection {
-    background-color: rgba(139, 92, 246, 0.35);
-    color: #ffffff;
+    background-color: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-md bg-gloss-brand px-4 py-2 text-sm font-medium text-white shadow-btn-primary transition-all hover:bg-gloss-brand-hover hover:shadow-btn-primary-hover active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-ink-soft;
   }
 
-  /* Sheen line that catches light at the top of primary buttons. */
-  .btn-primary::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.18) 0%,
-      rgba(255, 255, 255, 0) 45%
-    );
-    pointer-events: none;
+  .dot {
+    @apply inline-block h-2 w-2 rounded-full;
   }
 
-  .btn-secondary {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-md border border-border-subtle bg-gloss-surface px-4 py-2 text-sm font-medium text-text-primary shadow-card transition-all hover:border-border hover:bg-gloss-elevated hover:shadow-card-hover active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+  .paper-shine {
+    position: relative;
   }
-
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary;
-  }
-
-  .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm font-medium text-status-rejected-text shadow-inner-highlight transition-colors hover:bg-status-rejected-border/40 disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .input-base {
-    @apply w-full rounded-md border border-border-subtle bg-bg-deep px-3 py-2 text-base text-text-primary shadow-inner-deep placeholder:text-text-muted transition-colors hover:border-border focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 sm:text-sm;
-  }
-
-  .card {
-    @apply relative rounded-lg border border-border-subtle bg-gloss-surface shadow-card;
-  }
-
-  /* Top edge highlight — catches light like a polished surface. */
-  .card::before {
+  .paper-shine::before {
     content: "";
     position: absolute;
     top: 0;
@@ -115,7 +161,7 @@
     background: linear-gradient(
       to right,
       transparent 0%,
-      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0.9) 50%,
       transparent 100%
     );
     border-top-left-radius: inherit;
@@ -124,38 +170,23 @@
     z-index: 1;
   }
 
-  .card-interactive {
-    @apply relative rounded-lg border border-border-subtle bg-gloss-surface shadow-card transition-all hover:border-border hover:shadow-card-hover;
-  }
-
-  /* Small section divider — gradient hairline. */
-  .divider-gradient {
+  .divider-soft {
     height: 1px;
     background: linear-gradient(
       to right,
-      transparent 0%,
-      rgba(255, 255, 255, 0.08) 50%,
-      transparent 100%
+      transparent,
+      hsl(var(--border)) 30%,
+      hsl(var(--border)) 70%,
+      transparent
     );
   }
 
-  /* Small uppercase label used above sections and stat blocks */
-  .eyebrow {
-    @apply text-[11px] font-medium uppercase tracking-wider text-text-muted;
-  }
-
-  /* Status dot — paired with text label or status badge */
-  .dot {
-    @apply inline-block h-2 w-2 rounded-full;
-  }
-
-  /* Skeleton shimmer for loading states */
   .skeleton {
     background: linear-gradient(
       90deg,
-      #1c2128 0%,
-      #262c33 50%,
-      #1c2128 100%
+      hsl(var(--muted)) 0%,
+      hsl(var(--surface-raised)) 50%,
+      hsl(var(--muted)) 100%
     );
     background-size: 200% 100%;
     @apply animate-shimmer rounded;

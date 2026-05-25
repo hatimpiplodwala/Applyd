@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { FilterBar, type StatusFilter } from "@/components/filter-bar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { Application, Status } from "@/lib/types";
 
 interface ApplicationsTableProps {
@@ -24,7 +26,6 @@ interface ApplicationsTableProps {
 type SortKey = "date_applied" | "company" | "role" | "status";
 type SortDir = "asc" | "desc";
 
-// Maps status to the left-border accent for each row.
 const STATUS_ROW_ACCENT: Record<Status, string> = {
   Applied: "before:bg-status-applied-dot",
   "Phone Screen": "before:bg-status-screen-dot",
@@ -89,11 +90,11 @@ export function ApplicationsTable({
         onSearchChange={setSearch}
       />
 
-      <div className="card overflow-hidden">
+      <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-subtle bg-bg-elevated text-left text-xs uppercase tracking-wider text-text-muted">
+              <tr className="border-b border-border bg-surface-sunken/60 text-left text-xs uppercase tracking-wider text-ink-soft">
                 <SortableHeader
                   label="Company"
                   active={sortKey === "company"}
@@ -137,10 +138,10 @@ export function ApplicationsTable({
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {!loading && filtered.length > 0 && (
-        <p className="text-xs text-text-muted">
+        <p className="text-xs text-ink-soft">
           Showing {filtered.length} of {applications.length}
         </p>
       )}
@@ -166,11 +167,11 @@ function SortableHeader({
         type="button"
         onClick={onClick}
         className={`inline-flex items-center gap-1.5 transition-colors ${
-          active ? "text-text-primary" : "hover:text-text-secondary"
+          active ? "text-foreground" : "hover:text-ink-mid"
         }`}
       >
         {label}
-        <Icon className={`h-3 w-3 ${active ? "text-brand-400" : "text-text-muted"}`} />
+        <Icon className={`h-3 w-3 ${active ? "text-primary" : "text-ink-soft"}`} />
       </button>
     </th>
   );
@@ -179,23 +180,23 @@ function SortableHeader({
 function Row({ app, onEdit }: { app: Application; onEdit: () => void }) {
   return (
     <tr
-      className={`group relative border-b border-border-subtle transition-colors last:border-0 hover:bg-bg-hover before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:opacity-60 before:transition-opacity hover:before:opacity-100 ${STATUS_ROW_ACCENT[app.status]}`}
+      className={`group relative border-b border-border/60 transition-colors last:border-0 hover:bg-surface-sunken/40 before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:opacity-70 before:transition-opacity hover:before:opacity-100 ${STATUS_ROW_ACCENT[app.status]}`}
     >
-      <td className="px-4 py-3 pl-5 font-medium text-text-primary">
+      <td className="px-4 py-3 pl-5 font-medium text-foreground">
         <div>{app.company}</div>
         {app.follow_up_date && <FollowUpBadge date={app.follow_up_date} />}
       </td>
-      <td className="px-4 py-3 text-text-secondary">{app.role}</td>
+      <td className="px-4 py-3 text-ink-mid">{app.role}</td>
       <td className="px-4 py-3">
         <StatusBadge status={app.status} />
       </td>
-      <td className="px-4 py-3 tabular-nums text-text-secondary">
+      <td className="px-4 py-3 tabular-nums text-ink-mid">
         {formatDate(app.date_applied)}
       </td>
-      <td className="hidden px-4 py-3 text-text-secondary lg:table-cell">
+      <td className="hidden px-4 py-3 text-ink-mid lg:table-cell">
         {app.location ?? "—"}
       </td>
-      <td className="hidden px-4 py-3 text-text-secondary lg:table-cell">
+      <td className="hidden px-4 py-3 text-ink-mid lg:table-cell">
         {app.salary_range ?? "—"}
       </td>
       <td className="hidden px-4 py-3 md:table-cell">
@@ -204,25 +205,27 @@ function Row({ app, onEdit }: { app: Application; onEdit: () => void }) {
             href={app.job_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-brand-400 hover:text-brand-500"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
           >
             View
             <ExternalLink className="h-3 w-3" />
           </a>
         ) : (
-          <span className="text-text-muted">—</span>
+          <span className="text-ink-soft">—</span>
         )}
       </td>
       <td className="px-4 py-3 text-right">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={onEdit}
           aria-label={`Edit ${app.company}`}
-          className="btn-ghost md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus:opacity-100"
+          className="md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus:opacity-100"
         >
           <Pencil className="h-3.5 w-3.5" />
           <span>Edit</span>
-        </button>
+        </Button>
       </td>
     </tr>
   );
@@ -234,14 +237,14 @@ function EmptyRow({ hasFilters }: { hasFilters: boolean }) {
     <tr>
       <td colSpan={8} className="px-4 py-16 text-center">
         <div className="mx-auto flex max-w-sm flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border-subtle bg-bg-elevated text-text-muted">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-sunken text-ink-soft">
             <Icon className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-medium text-text-primary">
+            <p className="text-sm font-medium text-foreground">
               {hasFilters ? "No matches" : "No applications yet"}
             </p>
-            <p className="mt-1 text-xs text-text-muted">
+            <p className="mt-1 text-xs text-ink-soft">
               {hasFilters
                 ? "Try clearing your filters or searching for something else."
                 : "Add your first application to start tracking your job search."}
@@ -267,7 +270,7 @@ function SkeletonRows() {
   return (
     <>
       {Array.from({ length: 5 }).map((_, i) => (
-        <tr key={i} className="border-b border-border-subtle last:border-0">
+        <tr key={i} className="border-b border-border/60 last:border-0">
           {cells.map((c, j) => (
             <td key={j} className={`px-4 py-4 ${c.hide ?? ""}`}>
               <div className={`skeleton h-3 ${c.w}`} />
@@ -292,10 +295,10 @@ function FollowUpBadge({ date }: { date: string }) {
   const overdue = days < 0;
   const soon = days >= 0 && days <= 2;
   const cls = overdue
-    ? "border-status-rejected-border bg-status-rejected-bg text-status-rejected-text"
+    ? "border-status-rejected-border bg-status-rejected-bg text-status-rejected-fg"
     : soon
-    ? "border-status-screen-border bg-status-screen-bg text-status-screen-text"
-    : "border-border-subtle bg-bg-elevated text-text-muted";
+    ? "border-status-screen-border bg-status-screen-bg text-status-screen-fg"
+    : "border-border bg-surface-sunken text-ink-soft";
   const label = overdue
     ? `Follow up overdue ${Math.abs(days)}d`
     : days === 0

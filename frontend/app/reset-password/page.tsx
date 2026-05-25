@@ -6,6 +6,10 @@ import Link from "next/link";
 import { AlertCircle, CheckCircle2, Lock, Send, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { BrandMark } from "@/components/brand";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -79,111 +83,115 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <BrandMark size="lg" />
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight">Applyd</h1>
-          <p className="mt-2 text-sm text-text-secondary">
-            Choose a new password
-          </p>
+          <h1 className="mt-4 font-serif text-3xl font-medium tracking-tight">
+            New password
+          </h1>
+          <p className="mt-1.5 text-sm text-ink-mid">Choose a fresh one</p>
         </div>
 
         {done ? (
-          <div className="card p-6 shadow-card animate-fade-in">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-status-offer-border bg-status-offer-bg text-status-offer-text">
-                <CheckCircle2 className="h-6 w-6" />
+          <Card className="animate-fade-in">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-status-offer-border bg-status-offer-bg text-status-offer-fg">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
+                <p className="text-sm">
+                  Password updated. Taking you to your dashboard…
+                </p>
               </div>
-              <p className="text-sm text-text-primary">
-                Password updated. Taking you to your dashboard…
-              </p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ) : invalidLink ? (
-          <div className="card p-6 space-y-4 shadow-card">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-status-rejected-border bg-status-rejected-bg text-status-rejected-text">
-                <XCircle className="h-6 w-6" />
+          <Card>
+            <CardContent className="space-y-4 p-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-status-rejected-border bg-status-rejected-bg text-status-rejected-fg">
+                  <XCircle className="h-6 w-6" />
+                </div>
+                <p className="text-sm">
+                  This reset link is invalid or expired. Request a new one.
+                </p>
               </div>
-              <p className="text-sm text-text-primary">
-                This reset link is invalid or expired. Request a new one.
-              </p>
-            </div>
-            <Link href="/forgot-password" className="btn-secondary w-full">
-              <Send className="h-4 w-4" />
-              Send a new link
-            </Link>
-          </div>
+              <Button variant="secondary" asChild className="w-full">
+                <Link href="/forgot-password">
+                  <Send className="h-4 w-4" />
+                  Send a new link
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          <form onSubmit={handleSubmit} className="card p-6 space-y-4 shadow-card">
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-xs font-medium text-text-secondary mb-1.5"
-              >
-                New password
-              </label>
-              <div className="relative">
-                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden />
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-base pl-9"
-                  disabled={!ready}
-                />
-              </div>
-              <p className="mt-1 text-xs text-text-muted">
-                At least 6 characters.
-              </p>
-            </div>
+          <Card>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="password">New password</Label>
+                  <div className="relative">
+                    <Lock
+                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft"
+                      aria-hidden
+                    />
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-9"
+                      disabled={!ready}
+                    />
+                  </div>
+                  <p className="text-xs text-ink-soft">At least 6 characters.</p>
+                </div>
 
-            <div>
-              <label
-                htmlFor="confirm"
-                className="block text-xs font-medium text-text-secondary mb-1.5"
-              >
-                Confirm new password
-              </label>
-              <div className="relative">
-                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden />
-                <input
-                  id="confirm"
-                  type="password"
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="input-base pl-9"
-                  disabled={!ready}
-                />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm">Confirm new password</Label>
+                  <div className="relative">
+                    <Lock
+                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft"
+                      aria-hidden
+                    />
+                    <Input
+                      id="confirm"
+                      type="password"
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      className="pl-9"
+                      disabled={!ready}
+                    />
+                  </div>
+                </div>
 
-            {error && (
-              <div
-                role="alert"
-                className="flex items-start gap-2 rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm text-status-rejected-text"
-              >
-                <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+                {error && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-2 rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm text-status-rejected-fg"
+                  >
+                    <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
-            <button
-              type="submit"
-              disabled={loading || !ready}
-              className="btn-primary w-full"
-            >
-              {!ready
-                ? "Verifying link…"
-                : loading
-                ? "Updating…"
-                : "Update password"}
-            </button>
-          </form>
+                <Button
+                  type="submit"
+                  disabled={loading || !ready}
+                  className="w-full"
+                >
+                  {!ready
+                    ? "Verifying link…"
+                    : loading
+                    ? "Updating…"
+                    : "Update password"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

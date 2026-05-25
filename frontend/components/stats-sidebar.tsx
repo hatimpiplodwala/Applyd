@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ACTIVE_STATUSES, type Application, type Status } from "@/lib/types";
 import { BrandMark } from "@/components/brand";
 import { StatusDot } from "@/components/status-badge";
+import { Button } from "@/components/ui/button";
 
 interface StatsSidebarProps {
   email: string;
@@ -39,8 +40,6 @@ export function StatsSidebar({ email, applications }: StatsSidebarProps) {
     return counts;
   }, [applications]);
 
-  // 14-day activity sparkline + week-over-week delta.
-  // Bucket by local date so the bars match "today" in the user's TZ.
   const activity = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -78,39 +77,40 @@ export function StatsSidebar({ email, applications }: StatsSidebarProps) {
   return (
     <>
       {/* Mobile: compact top bar */}
-      <header className="flex w-full items-center justify-between gap-3 border-b border-border-subtle bg-bg-surface px-4 py-3 md:hidden">
+      <header className="flex w-full items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
           <BrandMark size="sm" />
-          <h1 className="text-sm font-semibold tracking-tight">Applyd</h1>
+          <h1 className="font-serif text-base font-medium tracking-tight">Applyd</h1>
         </div>
         <div className="flex items-center gap-2">
           <InlineStat label="Total" value={total} />
           <InlineStat label="Active" value={active} accent />
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleLogout}
             aria-label="Log out"
-            className="inline-flex items-center justify-center rounded-md border border-border-subtle p-1.5 text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
           >
             <LogOut className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Desktop: vertical sidebar */}
-      <aside className="hidden h-screen w-64 flex-col overflow-y-auto border-r border-border-subtle bg-gloss-sidebar px-5 py-6 shadow-sidebar md:flex md:sticky md:top-0">
+      <aside className="hidden h-screen w-64 flex-col overflow-y-auto border-r border-border bg-gloss-paper px-5 py-6 shadow-paper md:flex md:sticky md:top-0">
         <div className="flex items-center gap-2.5">
           <BrandMark size="md" />
           <div className="flex flex-col">
-            <h1 className="text-sm font-semibold tracking-tight text-text-primary">
+            <h1 className="font-serif text-base font-medium tracking-tight text-foreground">
               Applyd
             </h1>
-            <p className="text-[10px] uppercase tracking-wider text-text-muted">
+            <p className="text-[10px] uppercase tracking-wider text-ink-soft">
               Job tracker
             </p>
           </div>
         </div>
 
-        <div className="divider-gradient mt-6" />
+        <div className="divider-soft mt-6" />
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <Stat
@@ -137,7 +137,7 @@ export function StatsSidebar({ email, applications }: StatsSidebarProps) {
 
         {total > 0 && (
           <>
-            <div className="divider-gradient mt-6" />
+            <div className="divider-soft mt-6" />
             <div className="mt-6 space-y-4">
               <StatusGroup
                 label="Active"
@@ -154,17 +154,17 @@ export function StatsSidebar({ email, applications }: StatsSidebarProps) {
         )}
 
         <div className="mt-auto">
-          <div className="divider-gradient mb-4" />
+          <div className="divider-soft mb-4" />
           <div className="mb-3 space-y-0.5">
             <p className="eyebrow">Signed in</p>
-            <p className="truncate text-xs text-text-secondary" title={email}>
+            <p className="truncate text-xs text-ink-mid" title={email}>
               {email}
             </p>
           </div>
-          <button onClick={handleLogout} className="btn-secondary w-full">
+          <Button variant="secondary" onClick={handleLogout} className="w-full">
             <LogOut className="h-4 w-4" />
             Log out
-          </button>
+          </Button>
         </div>
       </aside>
     </>
@@ -187,19 +187,15 @@ function ActivityCard({
   const TrendIcon = delta >= 0 ? TrendingUp : TrendingDown;
   const trendColor =
     noTrend
-      ? "text-text-muted"
+      ? "text-ink-soft"
       : delta > 0
-      ? "text-status-offer-text"
+      ? "text-status-offer-fg"
       : delta < 0
-      ? "text-status-rejected-text"
-      : "text-text-muted";
+      ? "text-status-rejected-fg"
+      : "text-ink-soft";
 
   return (
-    <div className="relative mt-6 overflow-hidden rounded-lg border border-border-subtle bg-gloss-elevated px-3 py-3 shadow-card">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"
-      />
+    <div className="paper-shine relative mt-6 overflow-hidden rounded-lg border border-border bg-surface-raised px-3 py-3 shadow-paper-raised">
       <div className="flex items-center justify-between">
         <p className="eyebrow">Last 14 days</p>
         {!noTrend && (
@@ -214,10 +210,10 @@ function ActivityCard({
         )}
       </div>
       <div className="mt-1 flex items-baseline gap-2">
-        <p className="text-xl font-semibold tabular-nums text-text-primary">
+        <p className="font-serif text-2xl font-semibold tabular-nums text-foreground">
           {thisWeek}
         </p>
-        <p className="text-[11px] text-text-muted">this week</p>
+        <p className="text-[11px] text-ink-soft">this week</p>
       </div>
       <div
         className="mt-3 flex h-10 items-end gap-[3px]"
@@ -229,10 +225,10 @@ function ActivityCard({
           const isToday = i === buckets.length - 1;
           const height = b.count === 0 ? 6 : Math.max(10, (b.count / max) * 100);
           const cls = isToday
-            ? "bg-gradient-to-t from-brand-500 to-brand-400 shadow-glow-brand-soft ring-1 ring-brand-400/40"
+            ? "bg-primary shadow-forest-glow ring-1 ring-primary/40"
             : isThisWeek
-            ? "bg-gradient-to-t from-brand-600 to-brand-500/90 shadow-inner-highlight"
-            : "bg-bg-hover";
+            ? "bg-gloss-forest"
+            : "bg-surface-sunken";
           return (
             <div
               key={b.key}
@@ -261,7 +257,7 @@ function StatusGroup({
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between">
         <p className="eyebrow">{label}</p>
-        <span className="text-[11px] tabular-nums text-text-muted">
+        <span className="text-[11px] tabular-nums text-ink-soft">
           {subtotal}
         </span>
       </div>
@@ -269,13 +265,13 @@ function StatusGroup({
         {statuses.map((s) => (
           <li
             key={s}
-            className="flex items-center justify-between rounded px-2 py-1 text-xs transition-colors hover:bg-bg-hover"
+            className="flex items-center justify-between rounded px-2 py-1 text-xs transition-colors hover:bg-surface-sunken/60"
           >
-            <span className="flex items-center gap-2 text-text-secondary">
+            <span className="flex items-center gap-2 text-ink-mid">
               <StatusDot status={s} />
               {s}
             </span>
-            <span className="tabular-nums text-text-muted">{counts[s]}</span>
+            <span className="tabular-nums text-ink-soft">{counts[s]}</span>
           </li>
         ))}
       </ul>
@@ -296,29 +292,29 @@ function Stat({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-lg border px-3 py-3 transition-all ${
+      className={`paper-shine relative overflow-hidden rounded-lg border px-3 py-3 transition-all ${
         accent
-          ? "border-brand-700/60 bg-gloss-hero shadow-card-elevated hover:shadow-glow-brand-soft"
-          : "border-border-subtle bg-gloss-elevated shadow-card hover:border-border hover:shadow-card-hover"
+          ? "border-primary/40 bg-gloss-forest text-primary-foreground shadow-forest-button hover:shadow-forest-button-hover"
+          : "border-border bg-surface-raised shadow-paper-raised hover:shadow-paper-hover"
       }`}
     >
       <div
-        aria-hidden
-        className={`pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent ${
-          accent ? "via-brand-400/40" : "via-white/10"
-        }`}
-      />
-      <div
         className={`flex items-center gap-1.5 ${
-          accent ? "text-brand-400" : "text-text-muted"
+          accent ? "text-primary-foreground/80" : "text-ink-soft"
         }`}
       >
         {icon}
-        <p className="eyebrow">{label}</p>
+        <p
+          className={`text-[11px] font-medium uppercase tracking-[0.12em] ${
+            accent ? "text-primary-foreground/80" : "text-ink-soft"
+          }`}
+        >
+          {label}
+        </p>
       </div>
       <p
-        className={`mt-1 text-2xl font-semibold tabular-nums ${
-          accent ? "text-text-primary" : "text-text-primary"
+        className={`mt-1 font-serif text-2xl font-semibold tabular-nums ${
+          accent ? "text-primary-foreground" : "text-foreground"
         }`}
       >
         {value}
@@ -337,13 +333,13 @@ function InlineStat({
   accent?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-1 rounded-md border border-border-subtle bg-gloss-elevated px-2 py-1 shadow-inner-highlight">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+    <div className="flex items-center gap-1 rounded-md border border-border bg-surface-raised px-2 py-1 shadow-inner-paper">
+      <span className="text-[10px] font-medium uppercase tracking-wider text-ink-soft">
         {label}
       </span>
       <span
         className={`text-sm font-semibold tabular-nums ${
-          accent ? "text-brand-400" : "text-text-primary"
+          accent ? "text-primary" : "text-foreground"
         }`}
       >
         {value}

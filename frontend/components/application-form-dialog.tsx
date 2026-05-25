@@ -1,10 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Sparkles, Trash2 } from "lucide-react";
-import { Modal } from "@/components/modal";
+import { AlertCircle, Save, Sparkles, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { STATUSES, type Application, type ApplicationInput, type Status } from "@/lib/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ApplicationFormDialogProps {
   open: boolean;
@@ -102,7 +118,6 @@ export function ApplicationFormDialog({
         job_url:
           parsed.job_url ?? (parseMode === "url" ? url : f.job_url) ?? f.job_url,
       }));
-      // Company/role likely changed → re-run duplicate check on save.
       setDuplicateWarning(false);
       setForceSubmit(false);
     } catch (e) {
@@ -208,258 +223,262 @@ export function ApplicationFormDialog({
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={isEdit ? "Edit application" : "Add application"}
-      size="lg"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {!isEdit && (
-          <div className="rounded-md border border-border-subtle bg-bg-elevated/60 p-3">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary">
-                <Sparkles className="h-3.5 w-3.5 text-brand-400" />
-                Auto-fill from URL or pasted text
-              </span>
-              <div
-                role="tablist"
-                aria-label="Auto-fill source"
-                className="inline-flex rounded border border-border-subtle bg-bg-base p-0.5 text-xs"
-              >
-                {(["url", "text"] as const).map((m) => (
-                  <button
-                    key={m}
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {isEdit ? "Edit application" : "Add application"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {!isEdit && (
+            <div className="rounded-lg border border-border bg-surface-sunken/50 p-3.5">
+              <div className="mb-2.5 flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-mid">
+                  <Sparkles className="h-3.5 w-3.5 text-accent" />
+                  Auto-fill from URL or pasted text
+                </span>
+                <div
+                  role="tablist"
+                  aria-label="Auto-fill source"
+                  className="inline-flex rounded-md border border-border bg-surface-raised p-0.5 text-xs shadow-inner-paper"
+                >
+                  {(["url", "text"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      role="tab"
+                      aria-selected={parseMode === m}
+                      onClick={() => {
+                        setParseMode(m);
+                        setParseError(null);
+                      }}
+                      className={`rounded px-2 py-0.5 font-medium transition-colors ${
+                        parseMode === m
+                          ? "bg-gloss-forest text-primary-foreground shadow-forest-button"
+                          : "text-ink-mid hover:text-foreground"
+                      }`}
+                    >
+                      {m === "url" ? "URL" : "Text"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {parseMode === "url" ? (
+                <div className="flex gap-2">
+                  <Input
+                    id="parse_url"
+                    type="url"
+                    value={parseUrl}
+                    onChange={(e) => setParseUrl(e.target.value)}
+                    placeholder="https://…"
+                    disabled={parsing}
+                    className="flex-1"
+                  />
+                  <Button
                     type="button"
-                    role="tab"
-                    aria-selected={parseMode === m}
-                    onClick={() => {
-                      setParseMode(m);
-                      setParseError(null);
-                    }}
-                    className={`rounded px-2 py-0.5 font-medium transition-colors ${
-                      parseMode === m
-                        ? "bg-brand-500 text-white"
-                        : "text-text-secondary hover:text-text-primary"
-                    }`}
+                    variant="secondary"
+                    onClick={handleAutofill}
+                    disabled={parsing || !parseUrl.trim()}
+                    className="whitespace-nowrap"
                   >
-                    {m === "url" ? "URL" : "Text"}
-                  </button>
-                ))}
-              </div>
-            </div>
+                    {parsing ? "Parsing…" : "Auto-fill"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Textarea
+                    id="parse_text"
+                    value={parseText}
+                    onChange={(e) => setParseText(e.target.value)}
+                    placeholder="Paste the job description here…"
+                    rows={5}
+                    disabled={parsing}
+                    className="resize-y"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleAutofill}
+                    disabled={parsing || !parseText.trim()}
+                  >
+                    {parsing ? "Parsing…" : "Auto-fill"}
+                  </Button>
+                </div>
+              )}
 
-            {parseMode === "url" ? (
-              <div className="flex gap-2">
-                <input
-                  id="parse_url"
-                  type="url"
-                  value={parseUrl}
-                  onChange={(e) => setParseUrl(e.target.value)}
-                  placeholder="https://…"
-                  className="input-base flex-1"
-                  disabled={parsing}
-                />
-                <button
-                  type="button"
-                  onClick={handleAutofill}
-                  disabled={parsing || !parseUrl.trim()}
-                  className="btn-secondary whitespace-nowrap"
-                >
-                  {parsing ? "Parsing…" : "Auto-fill"}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <textarea
-                  id="parse_text"
-                  value={parseText}
-                  onChange={(e) => setParseText(e.target.value)}
-                  placeholder="Paste the job description here…"
-                  rows={5}
-                  className="input-base w-full resize-y"
-                  disabled={parsing}
-                />
-                <button
-                  type="button"
-                  onClick={handleAutofill}
-                  disabled={parsing || !parseText.trim()}
-                  className="btn-secondary"
-                >
-                  {parsing ? "Parsing…" : "Auto-fill"}
-                </button>
-              </div>
-            )}
-
-            {parseError && (
-              <p className="mt-2 text-xs text-status-rejected-text">
-                {parseError}
+              {parseError && (
+                <p className="mt-2 text-xs text-status-rejected-fg">
+                  {parseError}
+                </p>
+              )}
+              <p className="mt-2 text-[11px] text-ink-soft">
+                {parseMode === "url"
+                  ? "Works on direct company career pages (Greenhouse, Lever, Ashby). LinkedIn and Indeed block scrapers — use Text instead."
+                  : "Paste anything — full posting, snippet, or a single paragraph. Gemini extracts what it can."}
               </p>
-            )}
-            <p className="mt-2 text-[11px] text-text-muted">
-              {parseMode === "url"
-                ? "Works on direct company career pages (Greenhouse, Lever, Ashby). LinkedIn and Indeed block scrapers — use Text instead."
-                : "Paste anything — full posting, snippet, or a single paragraph. Gemini extracts what it can."}
-            </p>
-          </div>
-        )}
+            </div>
+          )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Company *" htmlFor="company">
-            <input
-              id="company"
-              required
-              value={form.company}
-              onChange={(e) => update("company", e.target.value)}
-              className="input-base"
-              autoFocus
-            />
-          </Field>
-          <Field label="Role *" htmlFor="role">
-            <input
-              id="role"
-              required
-              value={form.role}
-              onChange={(e) => update("role", e.target.value)}
-              className="input-base"
-            />
-          </Field>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Company *" htmlFor="company">
+              <Input
+                id="company"
+                required
+                value={form.company}
+                onChange={(e) => update("company", e.target.value)}
+                autoFocus
+              />
+            </Field>
+            <Field label="Role *" htmlFor="role">
+              <Input
+                id="role"
+                required
+                value={form.role}
+                onChange={(e) => update("role", e.target.value)}
+              />
+            </Field>
 
-          <Field label="Status *" htmlFor="status">
-            <select
-              id="status"
-              value={form.status}
-              onChange={(e) => update("status", e.target.value as Status)}
-              className="input-base"
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Date applied *" htmlFor="date_applied">
-            <input
-              id="date_applied"
-              type="date"
-              required
-              value={form.date_applied}
-              onChange={(e) => update("date_applied", e.target.value)}
-              className="input-base"
-            />
-          </Field>
-
-          <Field label="Follow-up date" htmlFor="follow_up_date">
-            <input
-              id="follow_up_date"
-              type="date"
-              value={form.follow_up_date}
-              onChange={(e) => update("follow_up_date", e.target.value)}
-              className="input-base"
-            />
-          </Field>
-
-          <Field label="Location" htmlFor="location">
-            <input
-              id="location"
-              value={form.location}
-              onChange={(e) => update("location", e.target.value)}
-              className="input-base"
-              placeholder="Remote, NYC, etc."
-            />
-          </Field>
-          <Field label="Salary range" htmlFor="salary_range">
-            <input
-              id="salary_range"
-              value={form.salary_range}
-              onChange={(e) => update("salary_range", e.target.value)}
-              className="input-base"
-              placeholder="$80k–$100k"
-            />
-          </Field>
-
-          <Field label="Job URL" htmlFor="job_url" full>
-            <input
-              id="job_url"
-              type="url"
-              value={form.job_url}
-              onChange={(e) => update("job_url", e.target.value)}
-              className="input-base"
-              placeholder="https://…"
-            />
-          </Field>
-
-          <Field label="Contact name" htmlFor="contact_name" full>
-            <input
-              id="contact_name"
-              value={form.contact_name}
-              onChange={(e) => update("contact_name", e.target.value)}
-              className="input-base"
-              placeholder="Recruiter or hiring manager"
-            />
-          </Field>
-
-          <Field label="Notes" htmlFor="notes" full>
-            <textarea
-              id="notes"
-              value={form.notes}
-              onChange={(e) => update("notes", e.target.value)}
-              rows={4}
-              className="input-base resize-y"
-            />
-          </Field>
-        </div>
-
-        {duplicateWarning && (
-          <div className="rounded-md border border-status-screen-border bg-status-screen-bg px-3 py-2 text-sm text-status-screen-text">
-            You already have an application for this company + role. Click Save
-            again to add it anyway.
-          </div>
-        )}
-
-        {error && (
-          <div className="rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm text-status-rejected-text">
-            {error}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between gap-2 border-t border-border-subtle pt-4">
-          <div>
-            {isEdit && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="btn-danger"
+            <Field label="Status *" htmlFor="status">
+              <Select
+                value={form.status}
+                onValueChange={(v) => update("status", v as Status)}
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                {deleting
-                  ? "Deleting…"
-                  : confirmDelete
-                  ? "Click again to confirm"
-                  : "Delete"}
-              </button>
-            )}
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Date applied *" htmlFor="date_applied">
+              <Input
+                id="date_applied"
+                type="date"
+                required
+                value={form.date_applied}
+                onChange={(e) => update("date_applied", e.target.value)}
+              />
+            </Field>
+
+            <Field label="Follow-up date" htmlFor="follow_up_date">
+              <Input
+                id="follow_up_date"
+                type="date"
+                value={form.follow_up_date}
+                onChange={(e) => update("follow_up_date", e.target.value)}
+              />
+            </Field>
+
+            <Field label="Location" htmlFor="location">
+              <Input
+                id="location"
+                value={form.location}
+                onChange={(e) => update("location", e.target.value)}
+                placeholder="Remote, NYC, etc."
+              />
+            </Field>
+            <Field label="Salary range" htmlFor="salary_range">
+              <Input
+                id="salary_range"
+                value={form.salary_range}
+                onChange={(e) => update("salary_range", e.target.value)}
+                placeholder="$80k–$100k"
+              />
+            </Field>
+
+            <Field label="Job URL" htmlFor="job_url" full>
+              <Input
+                id="job_url"
+                type="url"
+                value={form.job_url}
+                onChange={(e) => update("job_url", e.target.value)}
+                placeholder="https://…"
+              />
+            </Field>
+
+            <Field label="Contact name" htmlFor="contact_name" full>
+              <Input
+                id="contact_name"
+                value={form.contact_name}
+                onChange={(e) => update("contact_name", e.target.value)}
+                placeholder="Recruiter or hiring manager"
+              />
+            </Field>
+
+            <Field label="Notes" htmlFor="notes" full>
+              <Textarea
+                id="notes"
+                value={form.notes}
+                onChange={(e) => update("notes", e.target.value)}
+                rows={4}
+                className="resize-y"
+              />
+            </Field>
           </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="btn-secondary">
-              Cancel
-            </button>
-            <button type="submit" disabled={saving} className="btn-primary">
-              <Save className="h-3.5 w-3.5" />
-              {saving
-                ? "Saving…"
-                : duplicateWarning
-                ? "Save anyway"
-                : isEdit
-                ? "Save"
-                : "Add application"}
-            </button>
+
+          {duplicateWarning && (
+            <div className="flex items-start gap-2 rounded-md border border-status-screen-border bg-status-screen-bg px-3 py-2 text-sm text-status-screen-fg">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>
+                You already have an application for this company + role. Click
+                Save again to add it anyway.
+              </span>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-start gap-2 rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm text-status-rejected-fg">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
+            <div>
+              {isEdit && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  size="sm"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {deleting
+                    ? "Deleting…"
+                    : confirmDelete
+                    ? "Click again to confirm"
+                    : "Delete"}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="secondary" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving}>
+                <Save className="h-3.5 w-3.5" />
+                {saving
+                  ? "Saving…"
+                  : duplicateWarning
+                  ? "Save anyway"
+                  : isEdit
+                  ? "Save"
+                  : "Add application"}
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
-    </Modal>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -475,13 +494,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className={full ? "sm:col-span-2" : undefined}>
-      <label
-        htmlFor={htmlFor}
-        className="mb-1.5 block text-xs font-medium text-text-secondary"
-      >
-        {label}
-      </label>
+    <div className={`space-y-1.5 ${full ? "sm:col-span-2" : ""}`}>
+      <Label htmlFor={htmlFor}>{label}</Label>
       {children}
     </div>
   );
