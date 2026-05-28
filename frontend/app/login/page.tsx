@@ -40,12 +40,17 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <BrandMark size="lg" />
-          <h1 className="mt-4 font-serif text-3xl font-medium tracking-tight">
+          <div className="flex items-center gap-3">
+            <BrandMark size="lg" />
+            <span className="font-serif text-4xl font-medium tracking-tight text-foreground">
+              Applyd
+            </span>
+          </div>
+          <h1 className="mt-6 font-serif text-2xl font-medium tracking-tight">
             Welcome back
           </h1>
           <p className="mt-1.5 text-sm text-ink-mid">
-            Sign in to your Applyd account
+            Sign in to your account
           </p>
         </div>
 
