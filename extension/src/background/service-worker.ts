@@ -38,14 +38,16 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (typeof chrome.action.openPopup === "function") {
       try {
         await chrome.action.openPopup();
+        return;
       } catch {
-        await chrome.windows.create({
-          url: chrome.runtime.getURL("index.html"),
-          type: "popup",
-          width: 400,
-          height: 620,
-        });
+        /* fall through to window */
       }
     }
+    await chrome.windows.create({
+      url: chrome.runtime.getURL("index.html"),
+      type: "popup",
+      width: 400,
+      height: 620,
+    });
   }
 });
