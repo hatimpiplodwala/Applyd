@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { signIn } from "../lib/auth";
+import { BrandMark } from "./Brand";
 
 export default function Login({ onSignedIn }: { onSignedIn: () => void }) {
   const [email, setEmail] = useState("");
@@ -24,8 +25,11 @@ export default function Login({ onSignedIn }: { onSignedIn: () => void }) {
 
   return (
     <form className="stack" onSubmit={handleSubmit}>
-      <div className="brand">Applyd</div>
-      <p className="muted">Sign in to save jobs.</p>
+      <div className="login-head">
+        <BrandMark size="lg" />
+        <span className="brand">Applyd</span>
+      </div>
+      <p className="muted" style={{ textAlign: "center" }}>Sign in to save jobs.</p>
       <label className="field">
         <span>Email</span>
         <input

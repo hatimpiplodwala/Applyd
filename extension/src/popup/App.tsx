@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Login from "./Login";
 import QuickAdd from "./QuickAdd";
 import { getSession } from "../lib/auth";
+import { BrandLoader } from "./Brand";
 import type { RawExtraction } from "../lib/extract";
 
 const PENDING_KEY = "pendingExtraction";
@@ -27,7 +28,7 @@ export default function App() {
     setAuth(session ? "in" : "out");
   }
 
-  if (auth === "checking") return <div className="center muted">…</div>;
+  if (auth === "checking") return <BrandLoader label="Loading…" />;
   if (auth === "out") return <Login onSignedIn={() => setAuth("in")} />;
   return <QuickAdd pending={pending} onSignedOut={() => setAuth("out")} />;
 }

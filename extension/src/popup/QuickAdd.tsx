@@ -11,6 +11,7 @@ import {
   type RawExtraction,
 } from "../lib/extract";
 import { extractActiveTab } from "../lib/inject";
+import { BrandHeader, BrandLoader, BrandMark } from "./Brand";
 
 type Phase = "loading" | "ready" | "saving" | "saved" | "error";
 
@@ -69,6 +70,20 @@ export default function QuickAdd({
     }
   }
 
+  async function startManual() {
+    setError(null);
+    let jobUrl = "";
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.url?.startsWith("http")) jobUrl = tab.url;
+    } catch {
+      // No tab access — leave the URL blank for the user to fill.
+    }
+    setForm(fallbackForm({ jobUrl, title: "", today: todayLocal() }));
+    setNote("Add the job details below.");
+    setPhase("ready");
+  }
+
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));
     if (key === "company" || key === "role") setDupWarn(false);
@@ -109,17 +124,29 @@ export default function QuickAdd({
     }
   }
 
-  if (phase === "loading") return <div className="center muted">Reading page…</div>;
+  if (phase === "loading") return <BrandLoader label="Reading page…" />;
   if (phase === "error")
     return (
-      <div className="stack">
-        <div className="error">{error}</div>
-        <button className="btn" onClick={() => void run()}>Retry</button>
+      <div className="empty-state">
+        <BrandMark size="lg" tone="muted" />
+        <div className="empty-copy">
+          <span className="brand">Nothing to read here</span>
+          <p className="muted">
+            Open a job posting in this tab, or just add the details yourself.
+          </p>
+        </div>
+        <button className="btn primary" onClick={() => void startManual()}>
+          Add manually
+        </button>
+        <button type="button" className="link" onClick={() => void run()}>
+          Try again
+        </button>
       </div>
     );
   if (phase === "saved")
     return (
-      <div className="stack center">
+      <div className="stack center saved">
+        <BrandMark size="lg" />
         <div className="brand">Saved ✓</div>
         <a className="btn primary" href={config.dashboardUrl} target="_blank" rel="noreferrer">
           View in Applyd
@@ -132,10 +159,13 @@ export default function QuickAdd({
 
   return (
     <form className="stack" onSubmit={handleSave}>
-      <div className="row between">
-        <div className="brand">Save job</div>
-        <button type="button" className="link" onClick={onSignedOut}>Sign out</button>
-      </div>
+      <BrandHeader
+        subtitle="Save job"
+        size="sm"
+        right={
+          <button type="button" className="link" onClick={onSignedOut}>Sign out</button>
+        }
+      />
       {note && <div className="note">{note}</div>}
       <label className="field">
         <span>Company</span>
