@@ -29,3 +29,7 @@ extension/.env
 extension/dist
 extension/node_modules
 extension/*.zip
+
+# Browser extension local docs (untracked)
+extension/QA.md
+extension/STORE.md
