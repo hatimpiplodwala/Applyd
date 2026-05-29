@@ -1,0 +1,93 @@
+:root {
+  --background: 38 35% 92%;
+  --surface: 36 40% 96%;
+  --foreground: 130 14% 13%;
+  --ink-soft: 90 5% 55%;
+  --primary: 142 24% 24%;
+  --primary-foreground: 36 40% 96%;
+  --border: 36 18% 78%;
+  --destructive: 4 50% 42%;
+  --accent: 30 30% 46%;
+  --radius: 0.75rem;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  width: 380px;
+  font-family: "DM Sans", system-ui, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+#root { padding: 16px; }
+
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; gap: 12px; align-items: flex-end; }
+.row.between { justify-content: space-between; align-items: center; }
+.grow { flex: 1; }
+.center { text-align: center; padding: 24px 0; }
+
+.brand {
+  font-family: Georgia, "Fraunces", serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.muted { color: hsl(var(--ink-soft)); font-size: 13px; margin: 0; }
+
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.field > span { color: hsl(var(--ink-soft)); font-weight: 500; }
+.field input, .field select, .field textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  background: hsl(var(--surface));
+  color: inherit;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+  border-color: hsl(var(--primary));
+}
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: calc(var(--radius) - 4px);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+.btn:hover { background: hsl(var(--background)); }
+.btn.primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+.btn:disabled { opacity: 0.6; cursor: default; }
+
+.link {
+  background: none; border: none; padding: 0;
+  color: hsl(var(--accent)); font: inherit; font-size: 12px;
+  cursor: pointer; text-decoration: underline;
+}
+
+.error {
+  background: hsl(var(--destructive) / 0.1);
+  color: hsl(var(--destructive));
+  border: 1px solid hsl(var(--destructive) / 0.3);
+  padding: 8px 10px; border-radius: 8px; font-size: 13px;
+}
+.note { font-size: 12px; color: hsl(var(--ink-soft)); }
+.note.warn {
+  background: hsl(35 50% 90%); color: hsl(28 50% 30%);
+  border: 1px solid hsl(32 40% 72%); padding: 8px 10px; border-radius: 8px;
+}

@@ -23,3 +23,9 @@ prd.md
 supabase_setup.sql
 progress.txt
 DEPLOYMENT.md
+
+# Browser extension build artifacts
+extension/.env
+extension/dist
+extension/node_modules
+extension/*.zip
