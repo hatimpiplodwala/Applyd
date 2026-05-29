@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 type Size = "sm" | "md" | "lg";
 
-const BOX: Record<Size, number> = { sm: 28, md: 36, lg: 44 };
-const ICON: Record<Size, number> = { sm: 16, md: 20, lg: 24 };
+const BOX: Record<Size, number> = { sm: 20, md: 26, lg: 32 };
+const ICON: Record<Size, number> = { sm: 12, md: 15, lg: 18 };
 
 /** The forest "checklist" logo box — mirrors the web app's BrandMark. */
 export function BrandMark({
@@ -79,7 +79,7 @@ export function BrandLoader({ label }: { label: string }) {
     <div className="loader">
       <span className="brand-mark brand-mark-lg loader-mark">
         <span aria-hidden className="brand-mark-sheen" />
-        <ChecklistIcon size={28} className="brand-icon-draw" />
+        <ChecklistIcon size={20} className="brand-icon-draw" />
       </span>
       <span className="loader-label">{label}</span>
     </div>
