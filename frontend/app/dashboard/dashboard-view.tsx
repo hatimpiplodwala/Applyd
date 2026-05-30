@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BarChart3, Columns3, Download, Plus, ServerCrash, Table2 } from "lucide-react";
+import { BarChart3, Columns3, Download, Plus, RotateCcw, ServerCrash, Table2, X } from "lucide-react";
 import { StatsSidebar } from "@/components/stats-sidebar";
 import { ApplicationsTable } from "@/components/applications-table";
 import { ApplicationFormDialog } from "@/components/application-form-dialog";
@@ -29,7 +29,14 @@ export function DashboardView({ email }: DashboardViewProps) {
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Application | null>(null);
   const [view, setView] = useState<View>("table");
+  const [toast, setToast] = useState<{ message: string; app?: Application } | null>(
+    null
+  );
   const attemptRef = useRef(0);
+  // Timers for deletes awaiting their undo window, keyed by application id.
+  const pendingRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  const UNDO_WINDOW_MS = 6000;
 
   const load = useCallback(async () => {
     try {
@@ -70,9 +77,59 @@ export function DashboardView({ email }: DashboardViewProps) {
     });
   }
 
-  function handleDeleted(id: string) {
-    setApplications((prev) => prev.filter((a) => a.id !== id));
+  // Re-insert a restored row keeping the server's date_applied-desc ordering.
+  function insertSorted(list: Application[], app: Application): Application[] {
+    const next = [...list, app];
+    next.sort((a, b) => b.date_applied.localeCompare(a.date_applied));
+    return next;
   }
+
+  // The API delete fires only after the undo window elapses.
+  async function commitDelete(app: Application) {
+    pendingRef.current.delete(app.id);
+    setToast((t) => (t?.app?.id === app.id ? null : t));
+    try {
+      await api.deleteApplication(app.id);
+    } catch {
+      setApplications((prev) => insertSorted(prev, app));
+      setToast({ message: "Couldn't delete — restored it." });
+    }
+  }
+
+  function handleDeleted(app: Application) {
+    // Optimistically remove now; schedule the real delete after the undo window.
+    setApplications((prev) => prev.filter((a) => a.id !== app.id));
+    const timer = setTimeout(() => void commitDelete(app), UNDO_WINDOW_MS);
+    pendingRef.current.set(app.id, timer);
+    setToast({ message: `Deleted ${app.company}`, app });
+  }
+
+  function handleUndo(app: Application) {
+    const timer = pendingRef.current.get(app.id);
+    if (timer) clearTimeout(timer);
+    pendingRef.current.delete(app.id);
+    setApplications((prev) => insertSorted(prev, app));
+    setToast(null);
+  }
+
+  // Auto-dismiss the transient error toast (the undo toast clears on commit).
+  useEffect(() => {
+    if (!toast || toast.app) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // On unmount, flush any pending deletes so navigating away doesn't lose them.
+  useEffect(() => {
+    const pending = pendingRef.current;
+    return () => {
+      pending.forEach((timer, id) => {
+        clearTimeout(timer);
+        void api.deleteApplication(id).catch(() => {});
+      });
+      pending.clear();
+    };
+  }, []);
 
   function handleExport() {
     if (applications.length === 0) return;
@@ -172,7 +229,55 @@ export function DashboardView({ email }: DashboardViewProps) {
         onDeleted={handleDeleted}
         application={editing ?? undefined}
       />
+
+      {toast && (
+        <UndoToast
+          message={toast.message}
+          onUndo={toast.app ? () => handleUndo(toast.app!) : undefined}
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </>
+  );
+}
+
+function UndoToast({
+  message,
+  onUndo,
+  onDismiss,
+}: {
+  message: string;
+  onUndo?: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="animate-fade-in fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"
+    >
+      <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-raised px-4 py-2.5 text-sm text-foreground shadow-paper-raised">
+        <span className="text-ink-mid">{message}</span>
+        {onUndo && (
+          <button
+            type="button"
+            onClick={onUndo}
+            className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Undo
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          className="text-ink-soft hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   );
 }
 

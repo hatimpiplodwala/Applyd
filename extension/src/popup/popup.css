@@ -3,7 +3,7 @@
   --surface: 36 40% 96%;
   --foreground: 130 14% 13%;
   --ink-soft: 90 5% 55%;
-  --primary: 142 24% 24%;
+  --primary: 96 22% 30%;
   --primary-foreground: 36 40% 96%;
   --border: 36 18% 78%;
   --destructive: 4 50% 42%;
@@ -19,7 +19,7 @@ html { background: hsl(var(--primary)); }
 
 body {
   margin: 0;
-  width: 320px;
+  width: 280px;
   height: 460px;
   padding: 3px;
   overflow: hidden;
@@ -86,10 +86,10 @@ body {
   flex: none;
   border-radius: 8px;
   color: hsl(var(--primary-foreground));
-  background: linear-gradient(to bottom, hsl(142 24% 32%) 0%, hsl(142 24% 22%) 100%);
+  background: linear-gradient(to bottom, hsl(96 24% 38%) 0%, hsl(96 24% 26%) 100%);
   box-shadow:
-    0 1px 2px rgba(28, 44, 32, 0.4),
-    0 4px 12px -2px rgba(47, 74, 54, 0.35),
+    0 1px 2px rgba(42, 46, 26, 0.4),
+    0 4px 12px -2px rgba(66, 72, 42, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
@@ -200,21 +200,21 @@ body {
 }
 .btn:hover { background: hsl(var(--background)); }
 .btn.primary {
-  background: linear-gradient(to bottom, hsl(142 24% 32%) 0%, hsl(142 24% 22%) 100%);
+  background: linear-gradient(to bottom, hsl(96 24% 38%) 0%, hsl(96 24% 26%) 100%);
   color: hsl(var(--primary-foreground));
-  border-color: hsl(142 24% 20%);
+  border-color: hsl(96 24% 22%);
   box-shadow:
-    0 1px 2px rgba(28, 44, 32, 0.4),
-    0 4px 12px -2px rgba(47, 74, 54, 0.35),
+    0 1px 2px rgba(42, 46, 26, 0.4),
+    0 4px 12px -2px rgba(66, 72, 42, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15);
   transition: box-shadow 0.15s ease, transform 0.05s ease;
 }
 .btn.primary:hover {
-  background: linear-gradient(to bottom, hsl(142 24% 35%) 0%, hsl(142 24% 24%) 100%);
+  background: linear-gradient(to bottom, hsl(96 24% 41%) 0%, hsl(96 24% 28%) 100%);
   box-shadow:
-    0 2px 6px rgba(28, 44, 32, 0.5),
-    0 8px 20px -4px rgba(47, 74, 54, 0.45),
+    0 2px 6px rgba(42, 46, 26, 0.5),
+    0 8px 20px -4px rgba(66, 72, 42, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 .btn.primary:active { transform: translateY(1px); }

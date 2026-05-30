@@ -33,6 +33,7 @@ export default function QuickAdd({
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dupWarn, setDupWarn] = useState(false);
+  const [earlyDup, setEarlyDup] = useState(false);
 
   useEffect(() => {
     void run();
@@ -52,7 +53,16 @@ export default function QuickAdd({
       };
       try {
         const parsed = await api.parseJobFromText(extraction.text);
-        setForm(parseResponseToForm(parsed, ctx));
+        const filled = parseResponseToForm(parsed, ctx);
+        setForm(filled);
+        // Proactively flag a likely duplicate so the user knows before filling.
+        // Non-blocking: the save-time check is the real gate.
+        if (filled.company && filled.role) {
+          api
+            .duplicateCheck(filled.company, filled.role)
+            .then(({ exists }) => setEarlyDup(exists))
+            .catch(() => {});
+        }
       } catch (parseErr) {
         if (parseErr instanceof Error && parseErr.message === "SESSION_EXPIRED") {
           onSignedOut();
@@ -86,7 +96,10 @@ export default function QuickAdd({
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));
-    if (key === "company" || key === "role") setDupWarn(false);
+    if (key === "company" || key === "role") {
+      setDupWarn(false);
+      setEarlyDup(false);
+    }
   }
 
   async function handleSave(e: FormEvent) {
@@ -167,6 +180,11 @@ export default function QuickAdd({
         }
       />
       {note && <div className="note">{note}</div>}
+      {earlyDup && !dupWarn && (
+        <div className="note warn">
+          Looks like you already saved this one. You can still add it.
+        </div>
+      )}
       <label className="field">
         <span>Company</span>
         <input value={form.company} onChange={(e) => update("company", e.target.value)} required />

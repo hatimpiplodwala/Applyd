@@ -29,8 +29,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     await chrome.windows.create({
       url: chrome.runtime.getURL("index.html"),
       type: "popup",
-      width: 400,
-      height: 620,
+      width: 296,
+      height: 476,
     });
   } catch {
     // Extraction failed (e.g. restricted page). Open the popup empty so the
@@ -46,8 +46,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     await chrome.windows.create({
       url: chrome.runtime.getURL("index.html"),
       type: "popup",
-      width: 400,
-      height: 620,
+      width: 296,
+      height: 476,
     });
   }
 });

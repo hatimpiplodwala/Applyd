@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Parchment + forest palette — light, warm, earthy */
+    /* Parchment + olive palette — light, warm, earthy */
     --background: 38 35% 92%;            /* #F2EDE3 warm parchment */
     --foreground: 130 14% 13%;           /* #1F2520 ink */
 
@@ -22,7 +22,7 @@
     --popover: 36 40% 98%;
     --popover-foreground: 130 14% 13%;
 
-    --primary: 142 24% 24%;              /* #2F4A36 deep forest */
+    --primary: 96 22% 30%;               /* #4A5C39 warm olive */
     --primary-foreground: 36 40% 96%;
 
     --secondary: 36 30% 88%;
@@ -39,7 +39,7 @@
 
     --border: 36 18% 78%;
     --input: 36 18% 78%;
-    --ring: 142 24% 32%;
+    --ring: 96 26% 40%;
 
     --radius: 0.75rem;
 
@@ -54,10 +54,10 @@
     --status-screen-border: 32 40% 72%;
     --status-screen-dot: 30 55% 48%;
 
-    --status-interview-bg: 142 25% 88%;
-    --status-interview-fg: 142 30% 22%;
-    --status-interview-border: 142 22% 70%;
-    --status-interview-dot: 142 30% 38%;
+    --status-interview-bg: 120 24% 88%;
+    --status-interview-fg: 120 28% 22%;
+    --status-interview-border: 120 20% 70%;
+    --status-interview-dot: 120 28% 38%;
 
     --status-offer-bg: 80 30% 86%;
     --status-offer-fg: 95 35% 22%;
@@ -100,7 +100,7 @@
       ),
       radial-gradient(
         900px 600px at 95% 110%,
-        rgba(150, 175, 145, 0.18),
+        rgba(165, 170, 128, 0.18),
         transparent 60%
       );
     background-attachment: fixed;
