@@ -3,14 +3,14 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.deps import get_db
-
-logger = logging.getLogger(__name__)
 from app.schemas import (
     Application,
     ApplicationCreate,
     ApplicationUpdate,
     DuplicateCheck,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
@@ -93,12 +93,15 @@ def duplicate_check(
     db=Depends(get_db),
 ):
     client, user = db
+    # Only existence matters, so fetch at most one row instead of counting all
+    # matches (count="exact" makes PostgREST scan/count the full match set).
     query = (
         client.table(TABLE)
-        .select("id", count="exact")
+        .select("id")
         .eq("user_id", user.id)
         .ilike("company", company)
         .ilike("role", role)
+        .limit(1)
     )
     if exclude_id:
         query = query.neq("id", exclude_id)

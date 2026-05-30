@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Status = Literal[
     "Applied",
@@ -67,3 +67,28 @@ class Application(ApplicationBase):
 
 class DuplicateCheck(BaseModel):
     exists: bool
+
+
+MAX_URL_CHARS = 2048
+MAX_PASTED_TEXT_CHARS = 50_000
+
+
+class ParseRequest(BaseModel):
+    url: str | None = Field(default=None, max_length=MAX_URL_CHARS)
+    text: str | None = Field(default=None, max_length=MAX_PASTED_TEXT_CHARS)
+
+    @model_validator(mode="after")
+    def _one_of(self) -> "ParseRequest":
+        has_url = bool(self.url and self.url.strip())
+        has_text = bool(self.text and self.text.strip())
+        if has_url == has_text:  # both or neither
+            raise ValueError("Provide exactly one of url or text")
+        return self
+
+
+class ParseUrlResponse(BaseModel):
+    company: str | None = None
+    role: str | None = None
+    location: str | None = None
+    salary_range: str | None = None
+    job_url: str | None = None

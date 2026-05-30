@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import time
+from collections import OrderedDict
 from dataclasses import dataclass
 from threading import Lock
 
@@ -20,12 +21,12 @@ class CurrentUser:
 
 
 # In-process cache for Supabase auth.get_user results. Avoids a network
-# round-trip to Supabase Auth on every request. Bounded in size so memory
-# can't grow unbounded; entries expire after CACHE_TTL_SECONDS so a logged-out
-# token stops working within the TTL window.
+# round-trip to Supabase Auth on every request. An OrderedDict gives O(1)
+# LRU eviction; entries expire after CACHE_TTL_SECONDS so a logged-out token
+# stops working within the TTL window.
 CACHE_TTL_SECONDS = 60
 CACHE_MAX_ENTRIES = 1024
-_cache: dict[str, tuple[float, CurrentUser]] = {}
+_cache: "OrderedDict[str, tuple[float, CurrentUser]]" = OrderedDict()
 _cache_lock = Lock()
 
 
@@ -41,19 +42,19 @@ def _cache_get(token: str) -> CurrentUser | None:
             return None
         expires_at, user = entry
         if expires_at < time.monotonic():
-            _cache.pop(key, None)
+            del _cache[key]
             return None
+        _cache.move_to_end(key)
         return user
 
 
 def _cache_put(token: str, user: CurrentUser) -> None:
     key = _token_key(token)
     with _cache_lock:
-        if len(_cache) >= CACHE_MAX_ENTRIES:
-            # Drop the oldest entry; simple bound, not strict LRU.
-            oldest = min(_cache.items(), key=lambda kv: kv[1][0])
-            _cache.pop(oldest[0], None)
         _cache[key] = (time.monotonic() + CACHE_TTL_SECONDS, user)
+        _cache.move_to_end(key)
+        if len(_cache) > CACHE_MAX_ENTRIES:
+            _cache.popitem(last=False)  # evict least-recently-used
 
 
 def get_current_user(
