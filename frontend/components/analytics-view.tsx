@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { BarChart3, LineChart, Target } from "lucide-react";
 import { StatusDot } from "@/components/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { countByStatus } from "@/lib/applications";
 import { STATUSES, type Application, type Status } from "@/lib/types";
 
 interface AnalyticsViewProps {
@@ -26,18 +27,7 @@ const MONTH_LONG = new Intl.DateTimeFormat(undefined, {
 const MONTH_SHORT = new Intl.DateTimeFormat(undefined, { month: "short" });
 
 export function AnalyticsView({ applications }: AnalyticsViewProps) {
-  const counts = useMemo(() => {
-    const c: Record<Status, number> = {
-      Applied: 0,
-      "Phone Screen": 0,
-      Interview: 0,
-      Offer: 0,
-      Rejected: 0,
-      Withdrawn: 0,
-    };
-    for (const app of applications) c[app.status]++;
-    return c;
-  }, [applications]);
+  const counts = useMemo(() => countByStatus(applications), [applications]);
 
   const outcomes = useMemo(() => {
     const total = applications.length;

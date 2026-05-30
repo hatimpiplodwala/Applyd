@@ -15,9 +15,10 @@ import {
 } from "@dnd-kit/core";
 import { AlertCircle, Calendar, MapPin, MoveRight } from "lucide-react";
 import { StatusDot } from "@/components/status-badge";
+import { FollowUpBadge } from "@/components/follow-up-badge";
 import { api } from "@/lib/api";
+import { groupByStatus } from "@/lib/applications";
 import { STATUSES, type Application, type Status } from "@/lib/types";
-import { daysUntil } from "@/lib/utils";
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -34,18 +35,7 @@ export function KanbanBoard({ applications, onEdit, onSaved }: KanbanBoardProps)
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
   );
 
-  const grouped = useMemo(() => {
-    const map: Record<Status, Application[]> = {
-      Applied: [],
-      "Phone Screen": [],
-      Interview: [],
-      Offer: [],
-      Rejected: [],
-      Withdrawn: [],
-    };
-    for (const a of applications) map[a.status].push(a);
-    return map;
-  }, [applications]);
+  const grouped = useMemo(() => groupByStatus(applications), [applications]);
 
   const activeApp = activeId
     ? applications.find((a) => a.id === activeId) ?? null
@@ -205,31 +195,9 @@ function Card({ app, dragging }: { app: Application; dragging?: boolean }) {
           </span>
         )}
       </div>
-      {app.follow_up_date && <CardFollowUp date={app.follow_up_date} />}
-    </div>
-  );
-}
-
-function CardFollowUp({ date }: { date: string }) {
-  const days = daysUntil(date);
-  const overdue = days < 0;
-  const soon = days >= 0 && days <= 2;
-  const cls = overdue
-    ? "border-status-rejected-border bg-status-rejected-bg text-status-rejected-fg"
-    : soon
-    ? "border-status-screen-border bg-status-screen-bg text-status-screen-fg"
-    : "border-border bg-surface-sunken text-ink-soft";
-  const label = overdue
-    ? `Follow up overdue ${Math.abs(days)}d`
-    : days === 0
-    ? "Follow up today"
-    : `Follow up in ${days}d`;
-  return (
-    <div
-      className={`mt-2 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${cls}`}
-    >
-      <Calendar className="h-2.5 w-2.5" />
-      {label}
+      {app.follow_up_date && (
+        <FollowUpBadge date={app.follow_up_date} className="mt-2" />
+      )}
     </div>
   );
 }

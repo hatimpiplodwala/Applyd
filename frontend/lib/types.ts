@@ -16,6 +16,7 @@ export const STATUSES: Status[] = [
 ];
 
 export const ACTIVE_STATUSES: Status[] = ["Applied", "Phone Screen", "Interview"];
+export const CLOSED_STATUSES: Status[] = ["Offer", "Rejected", "Withdrawn"];
 
 export interface Application {
   id: string;

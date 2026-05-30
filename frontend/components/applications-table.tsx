@@ -5,18 +5,17 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  Calendar,
   ExternalLink,
   Inbox,
   Pencil,
   SearchX,
 } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
+import { FollowUpBadge } from "@/components/follow-up-badge";
 import { FilterBar, type StatusFilter } from "@/components/filter-bar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { Application, Status } from "@/lib/types";
-import { daysUntil } from "@/lib/utils";
+import type { Application } from "@/lib/types";
 
 interface ApplicationsTableProps {
   applications: Application[];
@@ -174,7 +173,9 @@ function Row({ app, onEdit }: { app: Application; onEdit: () => void }) {
     <tr className="group border-b border-border/60 transition-colors last:border-0 hover:bg-surface-sunken/40">
       <td className="px-4 py-3 font-medium text-foreground">
         <div>{app.company}</div>
-        {app.follow_up_date && <FollowUpBadge date={app.follow_up_date} />}
+        {app.follow_up_date && (
+          <FollowUpBadge date={app.follow_up_date} className="mt-1 font-normal" />
+        )}
       </td>
       <td className="px-4 py-3 text-ink-mid">{app.role}</td>
       <td className="px-4 py-3">
@@ -279,27 +280,4 @@ function formatDate(iso: string): string {
   return /^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0, 10) : iso;
 }
 
-function FollowUpBadge({ date }: { date: string }) {
-  const days = daysUntil(date);
-  const overdue = days < 0;
-  const soon = days >= 0 && days <= 2;
-  const cls = overdue
-    ? "border-status-rejected-border bg-status-rejected-bg text-status-rejected-fg"
-    : soon
-    ? "border-status-screen-border bg-status-screen-bg text-status-screen-fg"
-    : "border-border bg-surface-sunken text-ink-soft";
-  const label = overdue
-    ? `Follow up overdue ${Math.abs(days)}d`
-    : days === 0
-    ? "Follow up today"
-    : `Follow up in ${days}d`;
-  return (
-    <span
-      className={`mt-1 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-normal ${cls}`}
-    >
-      <Calendar className="h-2.5 w-2.5" />
-      {label}
-    </span>
-  );
-}
 

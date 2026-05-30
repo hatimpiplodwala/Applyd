@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Save, Sparkles, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
+import { toLocalIso } from "@/lib/utils";
 import { STATUSES, type Application, type ApplicationInput, type Status } from "@/lib/types";
 import {
   Dialog,
@@ -43,23 +44,13 @@ interface FormState {
   follow_up_date: string;
 }
 
-function todayIso(): string {
-  // Local date components — toISOString uses UTC, which can land on the next
-  // day for late-evening users in negative-UTC zones.
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 function initialState(app?: Application): FormState {
   return {
     company: app?.company ?? "",
     role: app?.role ?? "",
     location: app?.location ?? "",
     status: app?.status ?? "Applied",
-    date_applied: app?.date_applied ?? todayIso(),
+    date_applied: app?.date_applied ?? toLocalIso(),
     job_url: app?.job_url ?? "",
     salary_range: app?.salary_range ?? "",
     contact_name: app?.contact_name ?? "",

@@ -4,7 +4,14 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Briefcase, LogOut, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { ACTIVE_STATUSES, type Application, type Status } from "@/lib/types";
+import { countByStatus } from "@/lib/applications";
+import { toLocalIso } from "@/lib/utils";
+import {
+  ACTIVE_STATUSES,
+  CLOSED_STATUSES,
+  type Application,
+  type Status,
+} from "@/lib/types";
 import { BrandMark } from "@/components/brand";
 import { StatusDot } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -14,31 +21,19 @@ interface StatsSidebarProps {
   applications: Application[];
 }
 
-const ACTIVE_GROUP: Status[] = ["Applied", "Phone Screen", "Interview"];
-const CLOSED_GROUP: Status[] = ["Offer", "Rejected", "Withdrawn"];
-
 const DAYS = 14;
 
 export function StatsSidebar({ email, applications }: StatsSidebarProps) {
   const router = useRouter();
 
   const total = applications.length;
-  const active = applications.filter((a) =>
-    ACTIVE_STATUSES.includes(a.status)
-  ).length;
 
-  const breakdown = useMemo(() => {
-    const counts: Record<Status, number> = {
-      Applied: 0,
-      "Phone Screen": 0,
-      Interview: 0,
-      Offer: 0,
-      Rejected: 0,
-      Withdrawn: 0,
-    };
-    for (const a of applications) counts[a.status]++;
-    return counts;
-  }, [applications]);
+  const breakdown = useMemo(
+    () => countByStatus(applications),
+    [applications]
+  );
+
+  const active = ACTIVE_STATUSES.reduce((sum, s) => sum + breakdown[s], 0);
 
   const activity = useMemo(() => {
     const today = new Date();
@@ -49,7 +44,7 @@ export function StatsSidebar({ email, applications }: StatsSidebarProps) {
     for (let i = DAYS - 1; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
-      const key = isoLocal(d);
+      const key = toLocalIso(d);
       idx.set(key, buckets.length);
       buckets.push({ key, count: 0 });
     }
@@ -141,12 +136,12 @@ export function StatsSidebar({ email, applications }: StatsSidebarProps) {
             <div className="mt-6 space-y-4">
               <StatusGroup
                 label="Active"
-                statuses={ACTIVE_GROUP}
+                statuses={ACTIVE_STATUSES}
                 counts={breakdown}
               />
               <StatusGroup
                 label="Closed"
-                statuses={CLOSED_GROUP}
+                statuses={CLOSED_STATUSES}
                 counts={breakdown}
               />
             </div>
@@ -346,11 +341,4 @@ function InlineStat({
       </span>
     </div>
   );
-}
-
-function isoLocal(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
 }
