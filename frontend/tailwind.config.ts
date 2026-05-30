@@ -117,11 +117,11 @@ const config: Config = {
         "paper-press":
           "inset 0 2px 4px rgba(59, 47, 27, 0.08), inset 0 -1px 0 rgba(255, 255, 255, 0.4)",
         "forest-button":
-          "0 1px 2px rgba(28, 44, 32, 0.4), 0 4px 12px -2px rgba(47, 74, 54, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 0 rgba(0, 0, 0, 0.15)",
+          "0 1px 2px rgba(42, 46, 26, 0.4), 0 4px 12px -2px rgba(66, 72, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 0 rgba(0, 0, 0, 0.15)",
         "forest-button-hover":
-          "0 2px 6px rgba(28, 44, 32, 0.5), 0 8px 20px -4px rgba(47, 74, 54, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22)",
+          "0 2px 6px rgba(42, 46, 26, 0.5), 0 8px 20px -4px rgba(66, 72, 42, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22)",
         "forest-glow":
-          "0 0 0 4px rgba(47, 74, 54, 0.08), 0 0 18px -4px rgba(47, 74, 54, 0.25)",
+          "0 0 0 4px rgba(66, 72, 42, 0.08), 0 0 18px -4px rgba(66, 72, 42, 0.25)",
         ring: "0 0 0 3px hsl(var(--ring) / 0.2)",
         "inner-paper": "inset 0 1px 2px rgba(59, 47, 27, 0.08)",
       },
@@ -131,9 +131,9 @@ const config: Config = {
         "gloss-cream":
           "linear-gradient(to bottom, #FFFBF3 0%, #F7F1E4 100%)",
         "gloss-forest":
-          "linear-gradient(to bottom, hsl(142 24% 32%) 0%, hsl(142 24% 22%) 100%)",
+          "linear-gradient(to bottom, hsl(96 24% 38%) 0%, hsl(96 24% 26%) 100%)",
         "gloss-forest-hover":
-          "linear-gradient(to bottom, hsl(142 24% 35%) 0%, hsl(142 24% 24%) 100%)",
+          "linear-gradient(to bottom, hsl(96 24% 41%) 0%, hsl(96 24% 28%) 100%)",
         "gloss-oak":
           "linear-gradient(to bottom, #A38560 0%, #7C5E3D 100%)",
         "shine-top":

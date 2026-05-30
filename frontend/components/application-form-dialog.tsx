@@ -26,7 +26,7 @@ interface ApplicationFormDialogProps {
   open: boolean;
   onClose: () => void;
   onSaved: (app: Application) => void;
-  onDeleted: (id: string) => void;
+  onDeleted: (app: Application) => void;
   application?: Application;
 }
 
@@ -81,7 +81,6 @@ export function ApplicationFormDialog({
   const [error, setError] = useState<string | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState(false);
   const [forceSubmit, setForceSubmit] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [parseMode, setParseMode] = useState<"url" | "text">("url");
   const [parseUrl, setParseUrl] = useState("");
@@ -210,22 +209,16 @@ export function ApplicationFormDialog({
     }
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!application) return;
     if (!confirmDelete) {
       setConfirmDelete(true);
       return;
     }
-    setDeleting(true);
-    setError(null);
-    try {
-      await api.deleteApplication(application.id);
-      onDeleted(application.id);
-      onClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Delete failed");
-      setDeleting(false);
-    }
+    // Hand the row to the parent, which removes it optimistically and offers
+    // Undo via a toast before the API delete actually fires.
+    onDeleted(application);
+    onClose();
   }
 
   return (
@@ -454,15 +447,10 @@ export function ApplicationFormDialog({
                   type="button"
                   variant="destructive"
                   onClick={handleDelete}
-                  disabled={deleting}
                   size="sm"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  {deleting
-                    ? "Deleting…"
-                    : confirmDelete
-                    ? "Click again to confirm"
-                    : "Delete"}
+                  {confirmDelete ? "Click again to confirm" : "Delete"}
                 </Button>
               )}
             </div>
