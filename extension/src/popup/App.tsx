@@ -3,9 +3,8 @@ import Login from "./Login";
 import QuickAdd from "./QuickAdd";
 import { getSession } from "../lib/auth";
 import { BrandLoader } from "./Brand";
+import { PENDING_EXTRACTION_KEY } from "../lib/constants";
 import type { RawExtraction } from "../lib/extract";
-
-const PENDING_KEY = "pendingExtraction";
 
 type AuthState = "checking" | "out" | "in";
 
@@ -18,13 +17,16 @@ export default function App() {
   }, []);
 
   async function init() {
-    // The context-menu path stashes an extraction in session storage.
-    const stash = await chrome.storage.session.get(PENDING_KEY);
-    if (stash[PENDING_KEY]) {
-      setPending(stash[PENDING_KEY] as RawExtraction);
-      await chrome.storage.session.remove(PENDING_KEY);
+    // The context-menu path stashes an extraction in session storage. The
+    // stash read and the auth check are independent, so run them together.
+    const [stash, session] = await Promise.all([
+      chrome.storage.session.get(PENDING_EXTRACTION_KEY),
+      getSession(),
+    ]);
+    if (stash[PENDING_EXTRACTION_KEY]) {
+      setPending(stash[PENDING_EXTRACTION_KEY] as RawExtraction);
+      await chrome.storage.session.remove(PENDING_EXTRACTION_KEY);
     }
-    const session = await getSession();
     setAuth(session ? "in" : "out");
   }
 

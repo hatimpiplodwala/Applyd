@@ -1,5 +1,5 @@
-import type { Session } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
+import type { Session } from "@supabase/auth-js";
+import { authClient } from "./supabase";
 
 const REFRESH_SKEW_SECONDS = 60;
 
@@ -14,16 +14,16 @@ export function needsRefresh(
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await authClient.signInWithPassword({ email, password });
   if (error) throw new Error(error.message);
 }
 
 export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
+  await authClient.signOut();
 }
 
 export async function getSession(): Promise<Session | null> {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await authClient.getSession();
   return data.session;
 }
 
@@ -32,7 +32,7 @@ export async function getSession(): Promise<Session | null> {
 export async function getValidAccessToken(): Promise<string> {
   let session = await getSession();
   if (needsRefresh(session)) {
-    const { data, error } = await supabase.auth.refreshSession();
+    const { data, error } = await authClient.refreshSession();
     if (error || !data.session) throw new Error("SESSION_EXPIRED");
     session = data.session;
   }

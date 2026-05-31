@@ -21,19 +21,7 @@ function pageExtractor(): {
   };
 }
 
-// Injects the extractor into the active tab and returns a RawExtraction.
-export async function extractActiveTab(): Promise<RawExtraction> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id || !tab.url) throw new Error("No active tab");
-  const [result] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: pageExtractor,
-  });
-  const data = result.result as Omit<RawExtraction, "tabUrl">;
-  return { ...data, tabUrl: tab.url };
-}
-
-// Same extraction for an arbitrary tab id (used by the context menu path).
+// Injects the extractor into a tab by id and returns a RawExtraction.
 export async function extractTab(
   tabId: number,
   tabUrl: string
@@ -44,4 +32,11 @@ export async function extractTab(
   });
   const data = result.result as Omit<RawExtraction, "tabUrl">;
   return { ...data, tabUrl };
+}
+
+// Convenience wrapper for the active tab (used by the popup path).
+export async function extractActiveTab(): Promise<RawExtraction> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || !tab.url) throw new Error("No active tab");
+  return extractTab(tab.id, tab.url);
 }
