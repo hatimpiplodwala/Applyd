@@ -19,3 +19,12 @@ export function toLocalIso(d: Date = new Date()): string {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+/**
+ * Display a Postgres `date` (YYYY-MM-DD) as-is. Parsing via new Date() treats
+ * it as UTC midnight and toLocaleDateString shifts to local — landing on the
+ * previous day in negative-UTC zones. Slice the string instead.
+ */
+export function formatDate(iso: string): string {
+  return /^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0, 10) : iso;
+}
