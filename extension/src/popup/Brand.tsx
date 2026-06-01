@@ -60,7 +60,7 @@ export function BrandHeader({
   size?: Size;
 }) {
   return (
-    <div className="row between">
+    <div className="row between brand-header">
       <div className="brand-row">
         <BrandMark size={size} />
         <div className="brand-text">
