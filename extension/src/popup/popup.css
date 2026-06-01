@@ -1,49 +1,43 @@
 :root {
-  --background: 38 35% 92%;
-  --surface: 36 40% 96%;
+  --background: 40 24% 96%;
+  --surface: 0 0% 100%;
   --foreground: 130 14% 13%;
-  --ink-soft: 90 5% 55%;
+  --ink-soft: 120 6% 45%;
   --primary: 96 22% 30%;
   --primary-foreground: 36 40% 96%;
-  --border: 36 18% 78%;
+  --border: 36 16% 85%;
   --destructive: 4 50% 42%;
-  --accent: 30 30% 46%;
-  --radius: 0.75rem;
+  --accent: 96 22% 32%;
+  --radius: 0.5rem;
 }
 
 * { box-sizing: border-box; }
 
-/* Fixed popup size: the same width/height in every view. The green frame
-   (html + body) stays put while the beige interior (#root) scrolls. */
-html { background: hsl(var(--primary)); }
+/* Flat popup: a single near-white surface, no colored frame. */
+html { background: hsl(var(--background)); }
 
 body {
   margin: 0;
   width: 280px;
   height: 460px;
-  padding: 3px;
+  padding: 0;
   overflow: hidden;
   font-family: "DM Sans", system-ui, sans-serif;
-  background-color: hsl(var(--primary));
+  background: hsl(var(--background));
   color: hsl(var(--foreground));
 }
 
-/* Fill the frame and vertically center short views (login, loader, empty,
+/* Fill the popup and vertically center short views (login, loader, empty,
    saved). `safe center` keeps tall content (the form) scrollable from the top
    instead of clipping it. */
 #root {
   height: 100%;
-  padding: 16px;
+  padding: 14px;
   overflow-y: auto;
-  background-color: hsl(var(--background));
+  background: hsl(var(--background));
   display: flex;
   flex-direction: column;
   justify-content: safe center;
-  /* Rounded inner border. As a real border (not outline) it clips the
-     scrolling content to the rounded shape so nothing spills past it. The
-     square green frame fills the corner slivers. */
-  border: 2px solid hsl(var(--border));
-  border-radius: 12px;
 }
 
 #root > * { width: 100%; }
@@ -77,6 +71,12 @@ body {
 .brand-row { display: flex; align-items: center; gap: 10px; }
 .brand-text { display: flex; flex-direction: column; }
 .brand-subtitle { font-size: 12px; color: hsl(var(--ink-soft)); }
+
+/* Hairline divider under the in-form header. */
+.brand-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+}
 
 .brand-mark {
   position: relative;
@@ -176,13 +176,13 @@ body {
   font-size: 14px;
   padding: 8px 10px;
   border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius);
   background: hsl(var(--surface));
   color: inherit;
 }
 .field input:focus, .field select:focus, .field textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
   border-color: hsl(var(--primary));
 }
 
@@ -190,15 +190,16 @@ body {
   font: inherit;
   font-weight: 600;
   padding: 9px 14px;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius);
   border: 1px solid hsl(var(--border));
   background: hsl(var(--surface));
   color: inherit;
   cursor: pointer;
   text-align: center;
   text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.btn:hover { background: hsl(var(--background)); }
+.btn:hover { background: hsl(var(--background)); border-color: hsl(var(--ink-soft) / 0.4); }
 .btn.primary {
   background: linear-gradient(to bottom, hsl(96 24% 38%) 0%, hsl(96 24% 26%) 100%);
   color: hsl(var(--primary-foreground));
@@ -231,10 +232,10 @@ body {
   background: hsl(var(--destructive) / 0.1);
   color: hsl(var(--destructive));
   border: 1px solid hsl(var(--destructive) / 0.3);
-  padding: 8px 10px; border-radius: 8px; font-size: 13px;
+  padding: 8px 10px; border-radius: var(--radius); font-size: 13px;
 }
 .note { font-size: 12px; color: hsl(var(--ink-soft)); }
 .note.warn {
-  background: hsl(35 50% 90%); color: hsl(28 50% 30%);
-  border: 1px solid hsl(32 40% 72%); padding: 8px 10px; border-radius: 8px;
+  background: hsl(35 50% 92%); color: hsl(28 50% 30%);
+  border: 1px solid hsl(32 40% 75%); padding: 8px 10px; border-radius: var(--radius);
 }

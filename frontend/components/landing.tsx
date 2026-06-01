@@ -20,7 +20,7 @@ export function Landing() {
 function TopNav() {
   return (
     <header className="relative z-10">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">
           <BrandMark size="md" />
           <div className="flex flex-col">
@@ -45,16 +45,16 @@ function TopNav() {
 
 function Hero() {
   return (
-    <section className="relative pt-20 pb-24 sm:pt-28 sm:pb-32">
-      <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-        <h1 className="text-balance font-serif text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+    <section className="relative pt-12 pb-10 sm:pt-16 sm:pb-12">
+      <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+        <h1 className="text-balance font-serif text-4xl font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
           Track every application in one place.
         </h1>
-        <p className="mt-6 max-w-xl text-balance text-base leading-relaxed text-ink-mid sm:text-lg">
+        <p className="mt-4 max-w-lg text-balance text-base leading-relaxed text-ink-mid">
           Pipeline, kanban, analytics, and follow-up reminders for your job
           search.
         </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Button size="lg" asChild>
             <Link href="/signup">
               Get started
@@ -67,7 +67,7 @@ function Hero() {
         </div>
       </div>
 
-      <div className="relative mt-20">
+      <div className="relative mt-12">
         <div
           aria-hidden
           className="pointer-events-none absolute -inset-x-12 -top-8 bottom-0 -z-10 bg-gradient-to-b from-primary/5 to-transparent blur-2xl"
@@ -336,15 +336,15 @@ const SAMPLE_ROWS = [
 
 function Features() {
   return (
-    <section className="relative py-20 sm:py-28">
+    <section className="relative pt-2 pb-12 sm:pt-4 sm:pb-16">
       <div className="mx-auto max-w-2xl text-center">
         <p className="eyebrow">Features</p>
-        <h2 className="mt-2 text-balance font-serif text-3xl font-medium leading-tight tracking-tight sm:text-4xl">
+        <h2 className="mt-2 text-balance font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
           Built for tracking a job search.
         </h2>
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
         <FeatureCard
           title="Drag-and-drop kanban"
           body="Move applications across stages. Updates are optimistic so the board feels instant."
@@ -375,10 +375,10 @@ function FeatureCard({
   preview: React.ReactNode;
 }) {
   return (
-    <div className="paper-shine flex flex-col rounded-xl border border-border bg-surface-raised p-5 shadow-paper-raised transition-shadow hover:shadow-paper-hover">
-      <h3 className="font-serif text-lg font-medium text-ink">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-ink-mid">{body}</p>
-      <div className="mt-5 flex-1">{preview}</div>
+    <div className="paper-shine flex flex-col rounded-xl border border-border bg-surface-raised p-4 shadow-paper-raised transition-shadow hover:shadow-paper-hover">
+      <h3 className="font-serif text-base font-medium text-ink">{title}</h3>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-mid">{body}</p>
+      <div className="mt-4 flex-1">{preview}</div>
     </div>
   );
 }
@@ -475,20 +475,20 @@ function ReminderPreview() {
 
 function CallToAction() {
   return (
-    <section className="relative pb-24 sm:pb-32">
-      <div className="paper-shine relative overflow-hidden rounded-2xl border border-border bg-gloss-cream p-8 text-center shadow-paper-hover sm:p-14">
+    <section className="relative pb-16 sm:pb-20">
+      <div className="paper-shine relative overflow-hidden rounded-2xl border border-border bg-gloss-cream p-7 text-center shadow-paper-hover sm:p-10">
         <div
           aria-hidden
           className="pointer-events-none absolute -bottom-32 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
         />
         <div className="relative">
-          <h2 className="text-balance font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+          <h2 className="text-balance font-serif text-xl font-medium leading-tight tracking-tight sm:text-2xl">
             Start tracking your applications.
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-ink-mid">
+          <p className="mx-auto mt-2 max-w-md text-sm text-ink-mid">
             Free to use. No credit card required.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button size="lg" asChild>
               <Link href="/signup">
                 Create an account
