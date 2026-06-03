@@ -10,18 +10,19 @@ import {
   Pencil,
   SearchX,
 } from "lucide-react";
-import { StatusBadge } from "@/components/status-badge";
 import { FollowUpBadge } from "@/components/follow-up-badge";
 import { FilterBar, type StatusFilter } from "@/components/filter-bar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { Application } from "@/lib/types";
+import { InlineStatusSelect } from "@/components/inline-status-select";
+import type { Application, Status } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 interface ApplicationsTableProps {
   applications: Application[];
   loading: boolean;
   onEdit: (app: Application) => void;
+  onStatusChange: (app: Application, status: Status) => void;
 }
 
 type SortKey = "date_applied" | "company" | "role" | "status";
@@ -31,6 +32,7 @@ export function ApplicationsTable({
   applications,
   loading,
   onEdit,
+  onStatusChange,
 }: ApplicationsTableProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [search, setSearch] = useState("");
@@ -124,7 +126,12 @@ export function ApplicationsTable({
                 <EmptyRow hasFilters={hasFilters} />
               ) : (
                 filtered.map((a) => (
-                  <Row key={a.id} app={a} onEdit={() => onEdit(a)} />
+                  <Row
+                    key={a.id}
+                    app={a}
+                    onEdit={() => onEdit(a)}
+                    onStatusChange={(status) => onStatusChange(a, status)}
+                  />
                 ))
               )}
             </tbody>
@@ -169,7 +176,15 @@ function SortableHeader({
   );
 }
 
-function Row({ app, onEdit }: { app: Application; onEdit: () => void }) {
+function Row({
+  app,
+  onEdit,
+  onStatusChange,
+}: {
+  app: Application;
+  onEdit: () => void;
+  onStatusChange: (status: Status) => void;
+}) {
   return (
     <tr className="group border-b border-border/60 transition-colors last:border-0 hover:bg-surface-sunken/40">
       <td className="px-4 py-3 font-medium text-foreground">
@@ -180,7 +195,11 @@ function Row({ app, onEdit }: { app: Application; onEdit: () => void }) {
       </td>
       <td className="px-4 py-3 text-ink-mid">{app.role}</td>
       <td className="px-4 py-3">
-        <StatusBadge status={app.status} />
+        <InlineStatusSelect
+          status={app.status}
+          onChange={onStatusChange}
+          label={app.company}
+        />
       </td>
       <td className="px-4 py-3 tabular-nums text-ink-mid">
         {formatDate(app.date_applied)}

@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
-import type { Application } from "@/lib/types";
+import type { Application, Status } from "@/lib/types";
 
 type View = "table" | "kanban" | "analytics";
 
@@ -75,6 +75,18 @@ export function DashboardView({ email }: DashboardViewProps) {
       next[idx] = app;
       return next;
     });
+  }
+
+  async function handleStatusChange(app: Application, status: Status) {
+    if (app.status === status) return;
+    handleSaved({ ...app, status });
+    try {
+      const updated = await api.updateApplication(app.id, { status });
+      handleSaved(updated);
+    } catch {
+      handleSaved(app);
+      setToast({ message: "Couldn't update status — reverted." });
+    }
   }
 
   // Re-insert a restored row keeping the server's date_applied-desc ordering.
@@ -201,6 +213,7 @@ export function DashboardView({ email }: DashboardViewProps) {
                 applications={applications}
                 loading={loading}
                 onEdit={setEditing}
+                onStatusChange={handleStatusChange}
               />
             ) : view === "kanban" ? (
               <KanbanBoard
