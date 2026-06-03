@@ -29,6 +29,13 @@ def test_health(client):
     assert res.json() == {"status": "ok"}
 
 
+def test_security_headers_present(client):
+    res = client.get("/health")
+    assert res.headers["X-Content-Type-Options"] == "nosniff"
+    assert res.headers["X-Frame-Options"] == "DENY"
+    assert res.headers["Referrer-Policy"] == "no-referrer"
+
+
 # --- auth boundary -----------------------------------------------------------
 
 def test_missing_authorization_header_is_401(noauth_client):

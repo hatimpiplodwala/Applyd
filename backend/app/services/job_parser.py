@@ -44,6 +44,12 @@ def _is_public_address(host: str) -> bool:
 
     Defends against SSRF where the URL points to internal services
     (cloud metadata, internal admin UIs, RFC1918 subnets).
+
+    Residual risk: this resolves DNS here and httpx resolves again at connect
+    time, so a DNS-rebinding attacker could pass this check and then have the
+    connection land on a private IP. Closing that fully requires pinning the
+    connection to the validated IP (a custom transport). Given this endpoint is
+    authenticated and rate-limited, that hardening is tracked but not yet done.
     """
     try:
         infos = socket.getaddrinfo(host, None)
