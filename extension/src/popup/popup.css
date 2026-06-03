@@ -1,11 +1,12 @@
 :root {
-  --background: 40 24% 96%;
+  /* Aligned to the web app's parchment + olive tokens. */
+  --background: 38 35% 92%;
   --surface: 0 0% 100%;
   --foreground: 130 14% 13%;
-  --ink-soft: 120 6% 45%;
+  --ink-soft: 90 5% 55%;
   --primary: 96 22% 30%;
   --primary-foreground: 36 40% 96%;
-  --border: 36 16% 85%;
+  --border: 36 18% 78%;
   --destructive: 4 50% 42%;
   --accent: 96 22% 32%;
   --radius: 0.5rem;
@@ -86,19 +87,12 @@ body {
   flex: none;
   border-radius: 8px;
   color: hsl(var(--primary-foreground));
-  background: linear-gradient(to bottom, hsl(96 24% 38%) 0%, hsl(96 24% 26%) 100%);
-  box-shadow:
-    0 1px 2px rgba(42, 46, 26, 0.4),
-    0 4px 12px -2px rgba(66, 72, 42, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  background: hsl(var(--primary));
+  box-shadow: 0 1px 2px rgba(45, 55, 35, 0.18);
 }
+/* Sheen removed to match the flat web UI; element kept for markup stability. */
 .brand-mark-sheen {
-  position: absolute;
-  inset: 0 0 50% 0;
-  border-radius: 8px 8px 0 0;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.22), transparent);
-  pointer-events: none;
+  display: none;
 }
 .brand-mark-muted {
   background: hsl(var(--surface));
@@ -201,22 +195,15 @@ body {
 }
 .btn:hover { background: hsl(var(--background)); border-color: hsl(var(--ink-soft) / 0.4); }
 .btn.primary {
-  background: linear-gradient(to bottom, hsl(96 24% 38%) 0%, hsl(96 24% 26%) 100%);
+  background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border-color: hsl(96 24% 22%);
-  box-shadow:
-    0 1px 2px rgba(42, 46, 26, 0.4),
-    0 4px 12px -2px rgba(66, 72, 42, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.15s ease, transform 0.05s ease;
+  box-shadow: 0 1px 2px rgba(45, 55, 35, 0.18);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
 }
 .btn.primary:hover {
-  background: linear-gradient(to bottom, hsl(96 24% 41%) 0%, hsl(96 24% 28%) 100%);
-  box-shadow:
-    0 2px 6px rgba(42, 46, 26, 0.5),
-    0 8px 20px -4px rgba(66, 72, 42, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: hsl(96 22% 34%);
+  box-shadow: 0 2px 8px -2px rgba(45, 55, 35, 0.26);
 }
 .btn.primary:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.6; cursor: default; }
