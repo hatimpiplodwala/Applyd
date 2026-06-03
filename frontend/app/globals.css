@@ -92,18 +92,6 @@
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
-    background-image:
-      radial-gradient(
-        1200px 700px at 8% -5%,
-        rgba(207, 184, 142, 0.22),
-        transparent 60%
-      ),
-      radial-gradient(
-        900px 600px at 95% 110%,
-        rgba(165, 170, 128, 0.18),
-        transparent 60%
-      );
-    background-attachment: fixed;
   }
 
   h1, h2, h3 {
@@ -150,24 +138,6 @@
 
   .paper-shine {
     position: relative;
-  }
-  .paper-shine::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(255, 255, 255, 0.9) 50%,
-      transparent 100%
-    );
-    border-top-left-radius: inherit;
-    border-top-right-radius: inherit;
-    pointer-events: none;
-    z-index: 1;
   }
 
   .divider-soft {
