@@ -15,6 +15,7 @@ import { FilterBar, type StatusFilter } from "@/components/filter-bar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { InlineStatusSelect } from "@/components/inline-status-select";
+import { SelectionToolbar } from "@/components/selection-toolbar";
 import type { Application, Status } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -23,6 +24,10 @@ interface ApplicationsTableProps {
   loading: boolean;
   onEdit: (app: Application) => void;
   onStatusChange: (app: Application, status: Status) => void;
+  selected: Set<string>;
+  onSelectedChange: (next: Set<string>) => void;
+  onBulkStatus: (status: Status) => void;
+  onBulkDelete: () => void;
 }
 
 type SortKey = "date_applied" | "company" | "role" | "status";
@@ -33,6 +38,10 @@ export function ApplicationsTable({
   loading,
   onEdit,
   onStatusChange,
+  selected,
+  onSelectedChange,
+  onBulkStatus,
+  onBulkDelete,
 }: ApplicationsTableProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [search, setSearch] = useState("");
@@ -77,6 +86,15 @@ export function ApplicationsTable({
 
   return (
     <div className="space-y-4">
+      {selected.size > 0 && (
+        <SelectionToolbar
+          count={selected.size}
+          onStatus={onBulkStatus}
+          onDelete={onBulkDelete}
+          onClear={() => onSelectedChange(new Set())}
+        />
+      )}
+
       <FilterBar
         status={statusFilter}
         search={search}
@@ -89,6 +107,25 @@ export function ApplicationsTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-surface-sunken/60 text-left text-xs uppercase tracking-wider text-ink-soft">
+                <th className="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all"
+                    className="h-3.5 w-3.5 accent-primary"
+                    checked={
+                      filtered.length > 0 &&
+                      filtered.every((a) => selected.has(a.id))
+                    }
+                    onChange={(e) => {
+                      const next = new Set(selected);
+                      for (const a of filtered) {
+                        if (e.target.checked) next.add(a.id);
+                        else next.delete(a.id);
+                      }
+                      onSelectedChange(next);
+                    }}
+                  />
+                </th>
                 <SortableHeader
                   label="Company"
                   active={sortKey === "company"}
@@ -131,6 +168,13 @@ export function ApplicationsTable({
                     app={a}
                     onEdit={() => onEdit(a)}
                     onStatusChange={(status) => onStatusChange(a, status)}
+                    selected={selected.has(a.id)}
+                    onSelect={(checked) => {
+                      const next = new Set(selected);
+                      if (checked) next.add(a.id);
+                      else next.delete(a.id);
+                      onSelectedChange(next);
+                    }}
                   />
                 ))
               )}
@@ -180,13 +224,30 @@ function Row({
   app,
   onEdit,
   onStatusChange,
+  selected,
+  onSelect,
 }: {
   app: Application;
   onEdit: () => void;
   onStatusChange: (status: Status) => void;
+  selected: boolean;
+  onSelect: (checked: boolean) => void;
 }) {
   return (
-    <tr className="group border-b border-border/60 transition-colors last:border-0 hover:bg-surface-sunken/40">
+    <tr
+      className={`group border-b border-border/60 transition-colors last:border-0 hover:bg-surface-sunken/40 ${
+        selected ? "bg-surface-sunken/40" : ""
+      }`}
+    >
+      <td className="w-10 px-4 py-3">
+        <input
+          type="checkbox"
+          aria-label={`Select ${app.company}`}
+          className="h-3.5 w-3.5 accent-primary"
+          checked={selected}
+          onChange={(e) => onSelect(e.target.checked)}
+        />
+      </td>
       <td className="px-4 py-3 font-medium text-foreground">
         <div>{app.company}</div>
         {app.follow_up_date && (
@@ -246,7 +307,7 @@ function EmptyRow({ hasFilters }: { hasFilters: boolean }) {
   const Icon = hasFilters ? SearchX : Inbox;
   return (
     <tr>
-      <td colSpan={8} className="px-4 py-16 text-center">
+      <td colSpan={9} className="px-4 py-16 text-center">
         <div className="mx-auto flex max-w-sm flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-sunken text-ink-soft">
             <Icon className="h-5 w-5" />
@@ -269,6 +330,7 @@ function EmptyRow({ hasFilters }: { hasFilters: boolean }) {
 
 function SkeletonRows() {
   const cells: { hide?: string; w: string }[] = [
+    { w: "w-4" },
     { w: "w-28" },
     { w: "w-36" },
     { w: "w-20" },

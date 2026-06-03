@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
+import { insertSorted, insertManySorted } from "@/lib/applications";
 import type { Application, Status } from "@/lib/types";
 
 type View = "table" | "kanban" | "analytics";
@@ -29,9 +30,11 @@ export function DashboardView({ email }: DashboardViewProps) {
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Application | null>(null);
   const [view, setView] = useState<View>("table");
-  const [toast, setToast] = useState<{ message: string; app?: Application } | null>(
-    null
-  );
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<{
+    message: string;
+    apps?: Application[];
+  } | null>(null);
   const attemptRef = useRef(0);
   // Timers for deletes awaiting their undo window, keyed by application id.
   const pendingRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -89,17 +92,10 @@ export function DashboardView({ email }: DashboardViewProps) {
     }
   }
 
-  // Re-insert a restored row keeping the server's date_applied-desc ordering.
-  function insertSorted(list: Application[], app: Application): Application[] {
-    const next = [...list, app];
-    next.sort((a, b) => b.date_applied.localeCompare(a.date_applied));
-    return next;
-  }
-
   // The API delete fires only after the undo window elapses.
   async function commitDelete(app: Application) {
     pendingRef.current.delete(app.id);
-    setToast((t) => (t?.app?.id === app.id ? null : t));
+    setToast((t) => (t?.apps?.some((a) => a.id === app.id) ? null : t));
     try {
       await api.deleteApplication(app.id);
     } catch {
@@ -108,25 +104,54 @@ export function DashboardView({ email }: DashboardViewProps) {
     }
   }
 
-  function handleDeleted(app: Application) {
-    // Optimistically remove now; schedule the real delete after the undo window.
-    setApplications((prev) => prev.filter((a) => a.id !== app.id));
-    const timer = setTimeout(() => void commitDelete(app), UNDO_WINDOW_MS);
-    pendingRef.current.set(app.id, timer);
-    setToast({ message: `Deleted ${app.company}`, app });
+  // Optimistically remove rows now; schedule the real deletes after the undo window.
+  function scheduleDeletes(apps: Application[], message: string) {
+    const ids = new Set(apps.map((a) => a.id));
+    setApplications((prev) => prev.filter((a) => !ids.has(a.id)));
+    for (const app of apps) {
+      const timer = setTimeout(() => void commitDelete(app), UNDO_WINDOW_MS);
+      pendingRef.current.set(app.id, timer);
+    }
+    setToast({ message, apps });
   }
 
-  function handleUndo(app: Application) {
-    const timer = pendingRef.current.get(app.id);
-    if (timer) clearTimeout(timer);
-    pendingRef.current.delete(app.id);
-    setApplications((prev) => insertSorted(prev, app));
+  function handleDeleted(app: Application) {
+    scheduleDeletes([app], `Deleted ${app.company}`);
+  }
+
+  function handleDeletedMany(apps: Application[]) {
+    if (apps.length === 0) return;
+    scheduleDeletes(
+      apps,
+      `Deleted ${apps.length} application${apps.length === 1 ? "" : "s"}`
+    );
+  }
+
+  function handleUndo(apps: Application[]) {
+    for (const app of apps) {
+      const timer = pendingRef.current.get(app.id);
+      if (timer) clearTimeout(timer);
+      pendingRef.current.delete(app.id);
+    }
+    setApplications((prev) => insertManySorted(prev, apps));
     setToast(null);
+  }
+
+  function handleBulkStatus(status: Status) {
+    const targets = applications.filter((a) => selected.has(a.id));
+    setSelected(new Set());
+    for (const app of targets) void handleStatusChange(app, status);
+  }
+
+  function handleBulkDelete() {
+    const targets = applications.filter((a) => selected.has(a.id));
+    setSelected(new Set());
+    handleDeletedMany(targets);
   }
 
   // Auto-dismiss the transient error toast (the undo toast clears on commit).
   useEffect(() => {
-    if (!toast || toast.app) return;
+    if (!toast || toast.apps) return;
     const t = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(t);
   }, [toast]);
@@ -214,6 +239,10 @@ export function DashboardView({ email }: DashboardViewProps) {
                 loading={loading}
                 onEdit={setEditing}
                 onStatusChange={handleStatusChange}
+                selected={selected}
+                onSelectedChange={setSelected}
+                onBulkStatus={handleBulkStatus}
+                onBulkDelete={handleBulkDelete}
               />
             ) : view === "kanban" ? (
               <KanbanBoard
@@ -246,7 +275,7 @@ export function DashboardView({ email }: DashboardViewProps) {
       {toast && (
         <UndoToast
           message={toast.message}
-          onUndo={toast.app ? () => handleUndo(toast.app!) : undefined}
+          onUndo={toast.apps ? () => handleUndo(toast.apps!) : undefined}
           onDismiss={() => setToast(null)}
         />
       )}
