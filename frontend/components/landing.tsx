@@ -45,12 +45,12 @@ function TopNav() {
 
 function Hero() {
   return (
-    <section className="relative pt-12 pb-10 sm:pt-16 sm:pb-12">
+    <section className="relative pt-14 pb-12 sm:pt-20">
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-        <h1 className="text-balance font-serif text-4xl font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+        <h1 className="text-balance font-serif text-4xl font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl">
           Track every application in one place.
         </h1>
-        <p className="mt-4 max-w-lg text-balance text-base leading-relaxed text-ink-mid">
+        <p className="mt-4 max-w-md text-balance text-base leading-relaxed text-ink-mid">
           Pipeline, kanban, analytics, and follow-up reminders for your job
           search.
         </p>
@@ -67,11 +67,7 @@ function Hero() {
         </div>
       </div>
 
-      <div className="relative mt-12">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -inset-x-12 -top-8 bottom-0 -z-10 bg-gradient-to-b from-primary/5 to-transparent blur-2xl"
-        />
+      <div className="relative mt-14">
         <HeroPreview />
       </div>
     </section>
@@ -80,7 +76,7 @@ function Hero() {
 
 function HeroPreview() {
   return (
-    <div className="paper-shine relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-border bg-surface-raised p-2 shadow-paper-hover">
+    <div className="relative mx-auto max-w-5xl overflow-hidden rounded-xl border border-border bg-surface-raised p-2 shadow-paper-hover">
       <div className="flex gap-2">
         {/* Sidebar — matches stats-sidebar.tsx */}
         <aside className="hidden w-44 flex-shrink-0 flex-col rounded-xl border border-border bg-gloss-paper p-3 shadow-paper sm:flex">
@@ -375,7 +371,7 @@ function FeatureCard({
   preview: React.ReactNode;
 }) {
   return (
-    <div className="paper-shine flex flex-col rounded-xl border border-border bg-surface-raised p-4 shadow-paper-raised transition-shadow hover:shadow-paper-hover">
+    <div className="flex flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-ink-soft/40">
       <h3 className="font-serif text-base font-medium text-ink">{title}</h3>
       <p className="mt-1.5 text-[13px] leading-relaxed text-ink-mid">{body}</p>
       <div className="mt-4 flex-1">{preview}</div>
@@ -476,29 +472,23 @@ function ReminderPreview() {
 function CallToAction() {
   return (
     <section className="relative pb-16 sm:pb-20">
-      <div className="paper-shine relative overflow-hidden rounded-2xl border border-border bg-gloss-cream p-7 text-center shadow-paper-hover sm:p-10">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-32 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
-        />
-        <div className="relative">
-          <h2 className="text-balance font-serif text-xl font-medium leading-tight tracking-tight sm:text-2xl">
-            Start tracking your applications.
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-ink-mid">
-            Free to use. No credit card required.
-          </p>
-          <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button size="lg" asChild>
-              <Link href="/signup">
-                Create an account
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/login">Already have an account? Sign in</Link>
-            </Button>
-          </div>
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface p-8 text-center sm:p-12">
+        <h2 className="text-balance font-serif text-xl font-medium leading-tight tracking-tight sm:text-2xl">
+          Start tracking your applications.
+        </h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-ink-mid">
+          Free to use. No credit card required.
+        </p>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button size="lg" asChild>
+            <Link href="/signup">
+              Create an account
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/login">Already have an account? Sign in</Link>
+          </Button>
         </div>
       </div>
     </section>
