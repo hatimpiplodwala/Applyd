@@ -169,6 +169,18 @@ export function DashboardView({ email }: DashboardViewProps) {
     };
   }, []);
 
+  // Drop any selected ids whose rows no longer exist (e.g. one was deleted via
+  // the edit dialog) so the selection toolbar can't show a phantom count.
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const ids = new Set(applications.map((a) => a.id));
+      const next = new Set<string>();
+      for (const id of prev) if (ids.has(id)) next.add(id);
+      return next.size === prev.size ? prev : next;
+    });
+  }, [applications]);
+
   function handleExport() {
     if (applications.length === 0) return;
     downloadCsv(applications);
