@@ -7,6 +7,7 @@ import { ApplicationsTable } from "@/components/applications-table";
 import { ApplicationFormDialog } from "@/components/application-form-dialog";
 import { KanbanBoard } from "@/components/kanban-board";
 import { AnalyticsView } from "@/components/analytics-view";
+import { EmptyOnboarding } from "@/components/empty-onboarding";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -233,6 +234,8 @@ export function DashboardView({ email }: DashboardViewProps) {
           <div key={view} className="animate-fade-in">
             {loadError ? (
               <LoadError onRetry={handleRetry} />
+            ) : !loading && applications.length === 0 ? (
+              <EmptyOnboarding onAdd={() => setAddOpen(true)} />
             ) : view === "table" ? (
               <ApplicationsTable
                 applications={applications}
