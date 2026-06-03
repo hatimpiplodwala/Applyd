@@ -24,6 +24,9 @@ supabase_setup.sql
 progress.txt
 DEPLOYMENT.md
 
+# Local planning docs (untracked)
+docs/
+
 # Browser extension build artifacts
 extension/.env
 extension/dist
