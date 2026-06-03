@@ -22,6 +22,7 @@ export interface ApplicationInput {
   location: string | null;
   status: Status;
   date_applied: string; // YYYY-MM-DD
+  follow_up_date: string | null; // YYYY-MM-DD
   job_url: string | null;
   salary_range: string | null;
   notes: string | null;

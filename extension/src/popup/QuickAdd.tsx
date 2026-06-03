@@ -122,6 +122,7 @@ export default function QuickAdd({
         location: form.location || null,
         status: form.status,
         date_applied: form.date_applied,
+        follow_up_date: form.follow_up_date || null,
         job_url: form.job_url || null,
         salary_range: form.salary_range || null,
         notes: form.notes || null,
@@ -160,7 +161,7 @@ export default function QuickAdd({
     return (
       <div className="stack center saved">
         <BrandMark size="lg" />
-        <div className="brand">Saved ✓</div>
+        <div className="brand">Saved</div>
         <a className="btn primary" href={config.dashboardUrl} target="_blank" rel="noreferrer">
           View in Applyd
         </a>
@@ -187,24 +188,28 @@ export default function QuickAdd({
       )}
       <label className="field">
         <span>Company</span>
-        <input value={form.company} onChange={(e) => update("company", e.target.value)} required />
+        <input value={form.company} onChange={(e) => update("company", e.target.value)} required autoFocus />
       </label>
       <label className="field">
         <span>Role</span>
         <input value={form.role} onChange={(e) => update("role", e.target.value)} required />
       </label>
+      <label className="field">
+        <span>Status</span>
+        <select value={form.status} onChange={(e) => update("status", e.target.value as Status)}>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </label>
       <div className="row">
-        <label className="field grow">
-          <span>Status</span>
-          <select value={form.status} onChange={(e) => update("status", e.target.value as Status)}>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </label>
         <label className="field grow">
           <span>Date applied</span>
           <input type="date" value={form.date_applied} onChange={(e) => update("date_applied", e.target.value)} required />
+        </label>
+        <label className="field grow">
+          <span>Follow-up</span>
+          <input type="date" value={form.follow_up_date} onChange={(e) => update("follow_up_date", e.target.value)} />
         </label>
       </div>
       <label className="field">

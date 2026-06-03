@@ -67,6 +67,7 @@ describe("parseResponseToForm", () => {
       job_url: "https://acme.com/jobs/123",
       status: "Applied",
       date_applied: "2026-05-29",
+      follow_up_date: "",
       notes: "",
     });
   });

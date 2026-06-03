@@ -20,6 +20,7 @@ export interface FormState {
   location: string;
   status: Status;
   date_applied: string;
+  follow_up_date: string;
   job_url: string;
   salary_range: string;
   notes: string;
@@ -68,6 +69,7 @@ export function parseResponseToForm(
     location: parsed.location ?? "",
     status: "Applied",
     date_applied: ctx.today,
+    follow_up_date: "",
     job_url: isHttp(parsed.job_url) ? parsed.job_url : ctx.jobUrl,
     salary_range: parsed.salary_range ?? "",
     notes: "",
