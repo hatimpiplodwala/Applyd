@@ -27,8 +27,10 @@ pipeline actually leaks.
 ## What it does
 
 - **AI auto-fill** — paste a job URL or text and Gemini extracts company, role, location, and salary into the form.
-- **One-click capture** — a Manifest V3 browser extension saves the posting you're viewing (popup or right-click), auto-filled, without leaving the tab.
+- **One-click capture** — a Manifest V3 browser extension saves the posting you're viewing (popup or right-click), auto-filled and with a follow-up date, without leaving the tab.
 - **Three ways to look at your search** — a sortable, filterable **table**; a drag-and-drop **kanban** board with optimistic updates; and **analytics** (status funnel, monthly volume, outcome split).
+- **Edit in place** — change a status right in the table row, or select rows for bulk status changes and deletes. Every delete (single or bulk) goes through an undo window before it actually hits the API.
+- **A guided start** — an empty account gets a three-step onboarding card (paste a link, add manually, install the extension) instead of a blank table.
 - **Follow-up reminders** — set a follow-up date on apply; optional Postgres-native email reminders (pg_cron + pg_net → Resend) go out the morning of.
 - **Duplicate detection** — warns when a company + role already exists, but still lets you save (re-applying is valid).
 - **Yours only** — every row is scoped to you by Supabase Row-Level Security; the API acts as the user, never with a god-mode key.
@@ -67,10 +69,13 @@ server reaches out to a third party.
 
 A few things that went deeper than the feature list suggests:
 
-- **SSRF-hardened URL parsing.** The "paste a link" feature fetches arbitrary URLs server-side — a classic SSRF foot-gun. Requests are validated against private/loopback/link-local ranges (including the cloud-metadata IP), and **every redirect hop is re-checked**, not just the first URL. Covered by unit tests.
+- **SSRF-hardened URL parsing.** The "paste a link" feature fetches arbitrary URLs server-side — a classic SSRF foot-gun. Requests are validated against private/loopback/link-local ranges (including the cloud-metadata IP), and **every redirect hop is re-checked**, not just the first URL. The one residual (DNS rebinding between check and connect) is documented in the code rather than hand-waved.
 - **Auth as the user, not as root.** The API never uses a service-role key; it forwards the caller's JWT to Supabase so RLS enforces ownership. Token validation is cached with a TTL + LRU so it isn't a per-request round-trip.
-- **Tested where it counts.** ~70 backend tests (pytest) split between pure-logic units (the SSRF guard, the parser) and integration tests that drive the real FastAPI routes via `TestClient` with Supabase and Gemini mocked at the dependency boundary — so they run offline. Frontend/extension helpers (CSV building, timezone-safe dates, page extraction) are covered by Vitest.
+- **Defense in depth.** Beyond RLS and the SSRF guard: per-route rate limiting (SlowAPI), strict input validation and length bounds (Pydantic v2), CORS locked to explicit origins, and `nosniff` / `frame-deny` / `no-referrer` security headers on every response.
+- **Optimistic, but reversible.** Inline status edits, kanban drags, and bulk changes apply instantly and roll back on failure. Deletes — single *or* bulk — run through one shared undo window, so the API call only fires once the toast times out.
+- **Tested where it counts.** ~85 tests across the stack. The backend (pytest) splits pure-logic units (the SSRF guard, the parser) from integration tests that drive the real FastAPI routes via `TestClient` with Supabase and Gemini mocked at the dependency boundary — so they run offline with no credentials. Frontend/extension helpers (CSV building, timezone-safe dates, sorted re-insertion, page extraction) are covered by Vitest.
 - **Performance passes.** Pooled `httpx` connections, a singleton Supabase browser client, pagination on list endpoints, and a slimmer extension bundle (swapped to `@supabase/auth-js`).
+- **A considered surface.** A flat, "warm & crafted" design system — parchment/olive palette, Fraunces + DM Sans, hairline borders over heavy shadows — applied consistently across the web app and the extension popup.
 - **Details that bite.** Spreadsheet formula-injection neutralized in CSV export; timezone-safe date handling so a `2026-05-31` never renders as the 30th in a negative-UTC zone.
 
 ## Project structure
