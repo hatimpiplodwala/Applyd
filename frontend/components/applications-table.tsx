@@ -1,23 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
   ExternalLink,
   Inbox,
-  Pencil,
   SearchX,
 } from "lucide-react";
 import { FollowUpBadge } from "@/components/follow-up-badge";
 import { FilterBar, type StatusFilter } from "@/components/filter-bar";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { InlineStatusSelect } from "@/components/inline-status-select";
 import { SelectionToolbar } from "@/components/selection-toolbar";
 import type { Application, Status } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { daysUntil, formatDate } from "@/lib/utils";
 
 interface ApplicationsTableProps {
   applications: Application[];
@@ -45,11 +43,18 @@ export function ApplicationsTable({
 }: ApplicationsTableProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("date_applied");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
+  // Debounce the term that actually drives filtering; the input stays instant.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 150);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     let rows = applications.filter((a) => {
       if (statusFilter !== "All" && a.status !== statusFilter) return false;
       if (
@@ -71,7 +76,7 @@ export function ApplicationsTable({
     });
 
     return rows;
-  }, [applications, statusFilter, search, sortKey, sortDir]);
+  }, [applications, statusFilter, debouncedSearch, sortKey, sortDir]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -84,29 +89,51 @@ export function ApplicationsTable({
 
   const hasFilters = statusFilter !== "All" || search.trim().length > 0;
 
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // "/" jumps focus to the search box, unless typing in a field or operating an
+  // open Radix popup (whose listbox/combobox would otherwise lose focus).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "/" || e.defaultPrevented) return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable ||
+          t.closest(
+            '[role="listbox"], [role="menu"], [role="dialog"], [role="combobox"]'
+          ))
+      ) {
+        return;
+      }
+      e.preventDefault();
+      searchRef.current?.focus();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div className="space-y-4">
-      {selected.size > 0 && (
-        <SelectionToolbar
-          count={selected.size}
-          onStatus={onBulkStatus}
-          onDelete={onBulkDelete}
-          onClear={() => onSelectedChange(new Set())}
-        />
-      )}
-
       <FilterBar
         status={statusFilter}
         search={search}
+        searchRef={searchRef}
         onStatusChange={setStatusFilter}
         onSearchChange={setSearch}
+        onClear={() => {
+          setStatusFilter("All");
+          setSearch("");
+        }}
       />
 
       <Card className="overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div className="max-h-[70vh] overflow-auto">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-surface-sunken/60 text-left text-xs uppercase tracking-wider text-ink-soft">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-border bg-surface-sunken text-left text-xs uppercase tracking-wider text-ink-soft">
                 <th className="w-10 px-4 py-3">
                   <input
                     type="checkbox"
@@ -153,7 +180,6 @@ export function ApplicationsTable({
                 <th className="hidden px-4 py-3 font-medium lg:table-cell">Location</th>
                 <th className="hidden px-4 py-3 font-medium lg:table-cell">Salary</th>
                 <th className="hidden px-4 py-3 font-medium md:table-cell">Link</th>
-                <th className="px-4 py-3" aria-label="Actions" />
               </tr>
             </thead>
             <tbody>
@@ -187,6 +213,15 @@ export function ApplicationsTable({
         <p className="text-xs text-ink-soft">
           Showing {filtered.length} of {applications.length}
         </p>
+      )}
+
+      {selected.size > 0 && (
+        <SelectionToolbar
+          count={selected.size}
+          onStatus={onBulkStatus}
+          onDelete={onBulkDelete}
+          onClear={() => onSelectedChange(new Set())}
+        />
       )}
     </div>
   );
@@ -233,11 +268,30 @@ function Row({
   selected: boolean;
   onSelect: (checked: boolean) => void;
 }) {
+  // The row is a mouse convenience: clicking it opens the editor, except on the
+  // interactive controls (checkbox, status select, link, company button), which
+  // handle their own clicks. Keyboard/AT users edit via the company button so
+  // the row needs no button role of its own (avoids nesting interactive
+  // controls inside a role="button"). Detection via closest() keeps each cell
+  // self-contained.
+  const isInteractive = (target: EventTarget | null) =>
+    !!(target as HTMLElement | null)?.closest(
+      'a, button, input, select, [role="combobox"], [role="listbox"]'
+    );
+
+  // Overdue / due-today follow-ups get a left accent so they catch the eye.
+  const urgent =
+    app.follow_up_date != null && daysUntil(app.follow_up_date) <= 0;
+
   return (
     <tr
-      className={`group border-b border-border/60 transition-colors last:border-0 hover:bg-surface-sunken/40 ${
-        selected ? "bg-surface-sunken/40" : ""
-      }`}
+      onClick={(e) => {
+        if (isInteractive(e.target)) return;
+        onEdit();
+      }}
+      className={`animate-fade-in cursor-pointer border-b border-l-2 border-border/60 transition-colors last:border-b-0 hover:bg-surface-sunken/40 ${
+        urgent ? "border-l-status-rejected-fg" : "border-l-transparent"
+      } ${selected ? "bg-surface-sunken/40" : ""}`}
     >
       <td className="w-10 px-4 py-3">
         <input
@@ -249,7 +303,14 @@ function Row({
         />
       </td>
       <td className="px-4 py-3 font-medium text-foreground">
-        <div>{app.company}</div>
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={`Edit ${app.company}`}
+          className="text-left hover:underline focus-visible:underline focus-visible:outline-none"
+        >
+          {app.company}
+        </button>
         {app.follow_up_date && (
           <FollowUpBadge date={app.follow_up_date} className="mt-1 font-normal" />
         )}
@@ -286,19 +347,6 @@ function Row({
           <span className="text-ink-soft">—</span>
         )}
       </td>
-      <td className="px-4 py-3 text-right">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onEdit}
-          aria-label={`Edit ${app.company}`}
-          className="md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus:opacity-100"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-          <span>Edit</span>
-        </Button>
-      </td>
     </tr>
   );
 }
@@ -307,7 +355,7 @@ function EmptyRow({ hasFilters }: { hasFilters: boolean }) {
   const Icon = hasFilters ? SearchX : Inbox;
   return (
     <tr>
-      <td colSpan={9} className="px-4 py-16 text-center">
+      <td colSpan={8} className="px-4 py-16 text-center">
         <div className="mx-auto flex max-w-sm flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-sunken text-ink-soft">
             <Icon className="h-5 w-5" />
@@ -338,7 +386,6 @@ function SkeletonRows() {
     { hide: "hidden lg:table-cell", w: "w-20" },
     { hide: "hidden lg:table-cell", w: "w-24" },
     { hide: "hidden md:table-cell", w: "w-12" },
-    { w: "w-10" },
   ];
   return (
     <>

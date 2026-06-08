@@ -181,6 +181,41 @@ export function DashboardView({ email }: DashboardViewProps) {
     });
   }, [applications]);
 
+  // Global shortcuts: "n" opens the add dialog, Esc clears a selection.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (addOpen || editing || e.defaultPrevented) return;
+      const t = e.target as HTMLElement | null;
+      // Ignore keys aimed at an open Radix popup (Select/menu/dialog renders a
+      // role'd container or combobox trigger, not a form control, so a tagName
+      // check alone misses it and the shortcut would hijack its typeahead).
+      if (
+        t?.closest(
+          '[role="listbox"], [role="menu"], [role="dialog"], [role="combobox"]'
+        )
+      ) {
+        return;
+      }
+      if (e.key === "Escape" && selected.size > 0) {
+        setSelected(new Set());
+        return;
+      }
+      const typing =
+        !!t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT" ||
+          t.isContentEditable);
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "n") {
+        e.preventDefault();
+        setAddOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [addOpen, editing, selected]);
+
   function handleExport() {
     if (applications.length === 0) return;
     downloadCsv(applications);

@@ -180,6 +180,24 @@ body {
   border-color: hsl(var(--primary));
 }
 
+/* Password field with an inline show/hide toggle. */
+.input-wrap { position: relative; display: flex; }
+.input-wrap input { flex: 1; padding-right: 52px; }
+.reveal {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: hsl(var(--ink-soft));
+  cursor: pointer;
+}
+.reveal:hover { color: hsl(var(--foreground)); }
+
 .btn {
   font: inherit;
   font-weight: 600;

@@ -19,6 +19,7 @@ import { FollowUpBadge } from "@/components/follow-up-badge";
 import { api } from "@/lib/api";
 import { groupByStatus } from "@/lib/applications";
 import { STATUSES, type Application, type Status } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -86,6 +87,7 @@ export function KanbanBoard({ applications, onEdit, onSaved }: KanbanBoardProps)
               status={status}
               apps={grouped[status]}
               onEdit={onEdit}
+              dragActive={activeId !== null}
             />
           ))}
         </div>
@@ -101,10 +103,12 @@ function Column({
   status,
   apps,
   onEdit,
+  dragActive,
 }: {
   status: Status;
   apps: Application[];
   onEdit: (app: Application) => void;
+  dragActive: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
@@ -127,10 +131,16 @@ function Column({
         }`}
       >
         {apps.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-border/60 px-2 py-6 text-center">
-            <MoveRight className="h-4 w-4 text-ink-soft" />
-            <p className="text-xs text-ink-soft">Drop here</p>
-          </div>
+          dragActive ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-primary/50 px-2 py-6 text-center">
+              <MoveRight className="h-4 w-4 text-primary" />
+              <p className="text-xs text-primary">Drop here</p>
+            </div>
+          ) : (
+            <div className="flex flex-1 items-center justify-center px-2 py-6 text-center">
+              <p className="text-xs text-ink-soft/60">Empty</p>
+            </div>
+          )
         ) : (
           apps.map((app) => (
             <DraggableCard key={app.id} app={app} onEdit={() => onEdit(app)} />
@@ -186,7 +196,7 @@ function Card({ app, dragging }: { app: Application; dragging?: boolean }) {
       <div className="mt-2 flex items-center justify-between text-[11px] text-ink-soft">
         <span className="inline-flex items-center gap-1 tabular-nums">
           <Calendar className="h-2.5 w-2.5" />
-          {app.date_applied}
+          {formatDate(app.date_applied)}
         </span>
         {app.location && (
           <span className="inline-flex items-center gap-1 truncate pl-2">

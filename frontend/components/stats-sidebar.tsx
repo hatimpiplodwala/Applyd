@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Briefcase, LogOut, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -177,6 +177,7 @@ function ActivityCard({
   lastWeek: number;
   max: number;
 }) {
+  const [hovered, setHovered] = useState<number | null>(null);
   const delta = thisWeek - lastWeek;
   const noTrend = thisWeek === 0 && lastWeek === 0;
   const TrendIcon = delta >= 0 ? TrendingUp : TrendingDown;
@@ -190,7 +191,7 @@ function ActivityCard({
       : "text-ink-soft";
 
   return (
-    <div className="paper-shine relative mt-6 overflow-hidden rounded-lg border border-border bg-surface-raised px-3 py-3 shadow-paper-raised">
+    <div className="paper-shine relative mt-6 rounded-lg border border-border bg-surface-raised px-3 py-3 shadow-paper-raised">
       <div className="flex items-center justify-between">
         <p className="eyebrow">Last 14 days</p>
         {!noTrend && (
@@ -211,10 +212,24 @@ function ActivityCard({
         <p className="text-[11px] text-ink-soft">this week</p>
       </div>
       <div
-        className="mt-3 flex h-10 items-end gap-[3px]"
+        className="relative mt-3 flex h-10 items-end gap-[3px]"
         role="img"
         aria-label={`Daily applications over the last ${DAYS} days`}
       >
+        {hovered !== null && (
+          <div
+            className="pointer-events-none absolute z-10 -translate-x-1/2 whitespace-nowrap rounded border border-border bg-surface-raised px-2 py-1 text-[10px] shadow-paper-raised"
+            style={{
+              left: `${((hovered + 0.5) / buckets.length) * 100}%`,
+              bottom: "calc(100% + 4px)",
+            }}
+          >
+            <span className="font-medium tabular-nums text-foreground">
+              {buckets[hovered].count}
+            </span>
+            <span className="text-ink-soft"> · {buckets[hovered].key.slice(5)}</span>
+          </div>
+        )}
         {buckets.map((b, i) => {
           const isThisWeek = i >= 7;
           const isToday = i === buckets.length - 1;
@@ -227,9 +242,10 @@ function ActivityCard({
           return (
             <div
               key={b.key}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered((h) => (h === i ? null : h))}
               className={`flex-1 rounded-sm transition-all ${cls}`}
               style={{ height: `${height}%` }}
-              title={`${b.key}: ${b.count}`}
             />
           );
         })}

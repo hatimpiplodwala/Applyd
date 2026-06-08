@@ -27,6 +27,13 @@ FETCH_TIMEOUT_SECONDS = 8.0
 MAX_BYTES = 1_500_000  # ~1.5MB raw HTML
 MAX_TEXT_CHARS = 18_000  # truncate before sending to the LLM
 
+# Only fetch over the standard web ports. Combined with the public-IP check,
+# this shrinks the SSRF surface: even if a host rebinds or redirects to a
+# private IP, it can't reach internal services listening on non-standard ports
+# (databases, admin panels, etc.). Cap the redirect chain for the same reason.
+ALLOWED_PORTS = {80, 443}
+MAX_REDIRECTS = 5
+
 GEMINI_MODEL = "gemini-2.5-flash"
 
 SYSTEM_PROMPT = (
@@ -73,6 +80,19 @@ def _is_public_address(host: str) -> bool:
     return True
 
 
+def _port_allowed(parsed) -> bool:
+    """True if the URL uses a default port or one of the allowed standard ports.
+
+    `parsed.port` raises ValueError on a malformed port (e.g. ``host:abc``); we
+    treat that as disallowed.
+    """
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
+    return port is None or port in ALLOWED_PORTS
+
+
 def _check_redirect_target(response: httpx.Response) -> None:
     """Event hook: re-validate each redirect Location against the SSRF guard.
 
@@ -92,6 +112,10 @@ def _check_redirect_target(response: httpx.Response) -> None:
         raise HTTPException(
             status_code=400, detail="Redirect to non-HTTP URL blocked"
         )
+    if not _port_allowed(parsed):
+        raise HTTPException(
+            status_code=400, detail="Redirect to a non-standard port blocked"
+        )
     if not parsed.hostname or not _is_public_address(parsed.hostname):
         raise HTTPException(
             status_code=400,
@@ -107,6 +131,10 @@ def _validate_url(url: str) -> str:
         )
     if not parsed.hostname:
         raise HTTPException(status_code=400, detail="URL is missing a host")
+    if not _port_allowed(parsed):
+        raise HTTPException(
+            status_code=400, detail="URL must use a standard web port (80 or 443)"
+        )
     if not _is_public_address(parsed.hostname):
         raise HTTPException(
             status_code=400,
@@ -120,6 +148,7 @@ def _validate_url(url: str) -> str:
 _http_client = httpx.Client(
     timeout=FETCH_TIMEOUT_SECONDS,
     follow_redirects=True,
+    max_redirects=MAX_REDIRECTS,
     headers={
         "User-Agent": "Mozilla/5.0 (compatible; Applyd/1.0; +https://applyd.app)",
         "Accept": "text/html,application/xhtml+xml",
@@ -162,12 +191,18 @@ def _fetch_text(url: str) -> str:
                     "careers site."
                 ),
             ) from exc
+        # Keep the upstream status out of the client-facing detail (it's a weak
+        # SSRF oracle); log it for debugging instead.
+        logger.info("fetch failed url=%s upstream_status=%s", url, code)
         raise HTTPException(
-            status_code=400, detail=f"Failed to fetch URL (HTTP {code})"
+            status_code=400, detail="Couldn't fetch that page. Try a direct job posting URL."
         ) from exc
     except httpx.HTTPError as exc:
+        # The exception text can carry connection details (host/IP/port); don't
+        # surface it to the caller. Log it, return a generic message.
+        logger.info("fetch error url=%s err=%s", url, exc)
         raise HTTPException(
-            status_code=400, detail=f"Failed to fetch URL: {exc}"
+            status_code=400, detail="Couldn't fetch that page. Check the URL and try again."
         ) from exc
 
     soup = BeautifulSoup(raw, "html.parser")
@@ -208,25 +243,38 @@ def _extract_with_gemini(text: str, url: str, api_key: str) -> dict:
         raise HTTPException(
             status_code=502, detail="Model returned an empty response"
         )
-    try:
-        return json.loads(payload)
-    except json.JSONDecodeError:
-        # Fallback: try to extract the first {...} block in case the model
-        # wrapped the JSON in prose (shouldn't happen with response_mime_type
-        # set, but Gemini occasionally drifts on edge cases like login walls).
-        match = re.search(r"\{.*\}", payload, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(0))
-            except json.JSONDecodeError:
-                pass
+    parsed = _parse_json_object(payload)
+    if parsed is None:
         logger.warning(
-            "Gemini returned non-JSON for url=%s payload=%r", url, payload[:500]
+            "Gemini returned unusable JSON for url=%s payload=%r", url, payload[:500]
         )
         raise HTTPException(
             status_code=502,
-            detail="Model returned non-JSON response",
+            detail="Model returned an unexpected response",
         )
+    return parsed
+
+
+def _parse_json_object(payload: str) -> dict | None:
+    """Parse the model reply into a JSON *object*, or None if it isn't one.
+
+    Tries the whole payload, then the first {...} block (the model occasionally
+    wraps JSON in prose despite response_mime_type). Returns None for invalid
+    JSON *and* for valid-but-non-object JSON — a bare ``null``, list, or string
+    would otherwise reach the caller's ``.get()`` and raise an unhandled 500.
+    """
+    candidates = [payload]
+    match = re.search(r"\{.*\}", payload, re.DOTALL)
+    if match:
+        candidates.append(match.group(0))
+    for candidate in candidates:
+        try:
+            value = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            return value
+    return None
 
 
 def _coerce(value) -> str | None:
