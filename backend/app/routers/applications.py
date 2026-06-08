@@ -17,6 +17,15 @@ router = APIRouter(prefix="/applications", tags=["applications"])
 TABLE = "applications"
 
 
+def _escape_like(value: str) -> str:
+    """Escape SQL LIKE/ILIKE wildcards so the duplicate check matches the literal
+    company/role text. Without this, a value like ``%`` matches every row (and
+    ``_`` matches any single char), producing false-positive duplicates.
+    Backslash is escaped first so it doesn't double-escape the others.
+    """
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 @router.get("", response_model=list[Application])
 def list_applications(
     limit: int = Query(default=500, ge=1, le=1000),
@@ -99,8 +108,8 @@ def duplicate_check(
         client.table(TABLE)
         .select("id")
         .eq("user_id", user.id)
-        .ilike("company", company)
-        .ilike("role", role)
+        .ilike("company", _escape_like(company))
+        .ilike("role", _escape_like(role))
         .limit(1)
     )
     if exclude_id:

@@ -4,10 +4,14 @@ import { PENDING_EXTRACTION_KEY } from "../lib/constants";
 const MENU_ID = "applyd-save-job";
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: MENU_ID,
-    title: "Save Job to Applyd",
-    contexts: ["page", "link"],
+  // onInstalled also fires on update, where the menu item already exists;
+  // create() would then throw a "duplicate id" error. Clear first.
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: MENU_ID,
+      title: "Save Job to Applyd",
+      contexts: ["page", "link"],
+    });
   });
 });
 

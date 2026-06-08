@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
 import { config } from "../lib/config";
-import { STATUSES, type Status } from "../lib/types";
+import { STATUSES, type ParsedJob, type Status } from "../lib/types";
 import {
   buildExtraction,
   parseResponseToForm,
@@ -30,6 +30,7 @@ export default function QuickAdd({
 }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [form, setForm] = useState<FormState | null>(null);
+  const [loadLabel, setLoadLabel] = useState("Reading page…");
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dupWarn, setDupWarn] = useState(false);
@@ -40,9 +41,30 @@ export default function QuickAdd({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The parser hits the API, which can cold-start on a free-tier host. Reassure
+  // during a slow first hit, and retry once on a transient failure (e.g. a 502
+  // while the server spins up) before giving up to manual entry.
+  async function parseWithRetry(text: string): Promise<ParsedJob> {
+    try {
+      return await api.parseJobFromText(text);
+    } catch (err) {
+      if (err instanceof Error && err.message === "SESSION_EXPIRED") throw err;
+      setLoadLabel("Waking up the server…");
+      await new Promise((r) => setTimeout(r, 1500));
+      return api.parseJobFromText(text);
+    }
+  }
+
   async function run() {
     setPhase("loading");
     setNote(null);
+    setLoadLabel("Reading page…");
+    // A cold start often just hangs rather than erroring; nudge the label so the
+    // popup doesn't look frozen.
+    const slowTimer = setTimeout(
+      () => setLoadLabel("Waking up the server…"),
+      4000
+    );
     try {
       const raw = pending ?? (await extractActiveTab());
       const extraction = buildExtraction(raw);
@@ -52,7 +74,7 @@ export default function QuickAdd({
         today: todayLocal(),
       };
       try {
-        const parsed = await api.parseJobFromText(extraction.text);
+        const parsed = await parseWithRetry(extraction.text);
         const filled = parseResponseToForm(parsed, ctx);
         setForm(filled);
         // Proactively flag a likely duplicate so the user knows before filling.
@@ -77,11 +99,15 @@ export default function QuickAdd({
     } catch {
       setError("Couldn't read this page. Open a job posting and try again.");
       setPhase("error");
+    } finally {
+      clearTimeout(slowTimer);
     }
   }
 
   async function startManual() {
     setError(null);
+    setDupWarn(false);
+    setEarlyDup(false);
     let jobUrl = "";
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -95,7 +121,21 @@ export default function QuickAdd({
   }
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((f) => (f ? { ...f, [key]: value } : f));
+    setForm((f) => {
+      if (!f) return f;
+      const next = { ...f, [key]: value };
+      // Keep the follow-up on/after the application date. Otherwise the date
+      // input's `min` would mark an existing follow-up out-of-range, and HTML5
+      // validation would silently block the whole form from submitting.
+      if (
+        key === "date_applied" &&
+        next.follow_up_date &&
+        next.follow_up_date < next.date_applied
+      ) {
+        next.follow_up_date = next.date_applied;
+      }
+      return next;
+    });
     if (key === "company" || key === "role") {
       setDupWarn(false);
       setEarlyDup(false);
@@ -138,7 +178,7 @@ export default function QuickAdd({
     }
   }
 
-  if (phase === "loading") return <BrandLoader label="Reading page…" />;
+  if (phase === "loading") return <BrandLoader label={loadLabel} />;
   if (phase === "error")
     return (
       <div className="empty-state">
@@ -165,6 +205,7 @@ export default function QuickAdd({
         <a className="btn primary" href={config.dashboardUrl} target="_blank" rel="noreferrer">
           View in Applyd
         </a>
+        <button className="btn" onClick={() => void startManual()}>Save another</button>
         <button className="btn" onClick={() => window.close()}>Close</button>
       </div>
     );
@@ -180,9 +221,13 @@ export default function QuickAdd({
           <button type="button" className="link" onClick={onSignedOut}>Sign out</button>
         }
       />
-      {note && <div className="note">{note}</div>}
+      {note && (
+        <div className="note" role="status" aria-live="polite">
+          {note}
+        </div>
+      )}
       {earlyDup && !dupWarn && (
-        <div className="note warn">
+        <div className="note warn" role="status" aria-live="polite">
           Looks like you already saved this one. You can still add it.
         </div>
       )}
@@ -209,7 +254,12 @@ export default function QuickAdd({
         </label>
         <label className="field grow">
           <span>Follow-up</span>
-          <input type="date" value={form.follow_up_date} onChange={(e) => update("follow_up_date", e.target.value)} />
+          <input
+            type="date"
+            value={form.follow_up_date}
+            min={form.date_applied || undefined}
+            onChange={(e) => update("follow_up_date", e.target.value)}
+          />
         </label>
       </div>
       <label className="field">
@@ -229,11 +279,15 @@ export default function QuickAdd({
         <textarea value={form.notes} rows={2} onChange={(e) => update("notes", e.target.value)} />
       </label>
       {dupWarn && (
-        <div className="note warn">
+        <div className="note warn" role="status" aria-live="polite">
           You already have an application for this company + role. Save anyway?
         </div>
       )}
-      {error && <div className="error">{error}</div>}
+      {error && (
+        <div className="error" role="alert">
+          {error}
+        </div>
+      )}
       <button className="btn primary" type="submit" disabled={phase === "saving"}>
         {phase === "saving" ? "Saving…" : dupWarn ? "Save anyway" : "Save to Applyd"}
       </button>

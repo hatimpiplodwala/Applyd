@@ -23,9 +23,10 @@ export function SelectionToolbar({
   onClear: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm shadow-paper">
-      <span className="font-medium text-foreground">{count} selected</span>
-      <div className="ml-auto flex items-center gap-2">
+    <div className="animate-fade-in fixed inset-x-0 bottom-20 z-40 flex justify-center px-4">
+      <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-raised px-4 py-2.5 text-sm shadow-paper-raised">
+        <span className="font-medium text-foreground">{count} selected</span>
+        <div className="flex items-center gap-2">
         <Select onValueChange={(v) => onStatus(v as Status)}>
           <SelectTrigger className="h-8 w-[150px] text-xs">
             <SelectValue placeholder="Change status…" />
@@ -51,6 +52,7 @@ export function SelectionToolbar({
           <X className="h-3.5 w-3.5" />
           Clear
         </Button>
+        </div>
       </div>
     </div>
   );
