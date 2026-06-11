@@ -227,7 +227,7 @@ export function DashboardView({ email }: DashboardViewProps) {
 
       <main className="flex-1 overflow-x-auto">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 md:px-8 md:py-8">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="rise-in mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="eyebrow">Dashboard</p>
               <h2 className="mt-1 font-serif text-3xl font-medium tracking-tight text-foreground">

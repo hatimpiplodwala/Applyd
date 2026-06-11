@@ -92,7 +92,7 @@ export function StatsSidebar({ email, applications }: StatsSidebarProps) {
       </header>
 
       {/* Desktop: vertical sidebar */}
-      <aside className="hidden h-screen w-64 flex-col overflow-y-auto border-r border-border bg-gloss-paper px-5 py-6 shadow-paper md:flex md:sticky md:top-0">
+      <aside className="rise-in hidden h-screen w-64 flex-col overflow-y-auto border-r border-border bg-gloss-paper px-5 py-6 shadow-paper md:flex md:sticky md:top-0">
         <div className="flex items-center gap-2.5">
           <BrandMark size="md" />
           <div className="flex flex-col">
