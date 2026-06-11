@@ -6,21 +6,24 @@ import { Button } from "@/components/ui/button";
 export function Landing() {
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <TopNav />
-      <main className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <Hero />
-        <Features />
-        <CallToAction />
-      </main>
-      <Footer />
+      <div aria-hidden className="grain-overlay" />
+      <div className="relative z-10">
+        <TopNav />
+        <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <Hero />
+          <Features />
+          <CallToAction />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }
 
 function TopNav() {
   return (
-    <header className="relative z-10">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/75 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">
           <BrandMark size="md" />
           <div className="flex flex-col">
@@ -45,30 +48,41 @@ function TopNav() {
 
 function Hero() {
   return (
-    <section className="relative pt-14 pb-12 sm:pt-20">
-      <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-        <h1 className="text-balance font-serif text-4xl font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl">
-          Track every application in one place.
-        </h1>
-        <p className="mt-4 max-w-md text-balance text-base leading-relaxed text-ink-mid">
-          Pipeline, kanban, analytics, and follow-up reminders for your job
-          search.
-        </p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Button size="lg" asChild>
-            <Link href="/signup">
-              Get started
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button size="lg" variant="secondary" asChild>
-            <Link href="/login">Sign in</Link>
-          </Button>
+    <section className="relative pt-12 pb-14 sm:pt-16 lg:pt-24 lg:pb-20">
+      <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
+        <div className="max-w-xl">
+          <h1 className="rise-in text-balance font-serif font-medium leading-[1.02] tracking-tight text-ink text-[clamp(2.75rem,6vw,4.75rem)]">
+            Track every application in one place.
+          </h1>
+          <p
+            className="rise-in mt-5 max-w-md text-base leading-relaxed text-ink-mid sm:text-lg"
+            style={{ animationDelay: "80ms" }}
+          >
+            Pipeline, kanban, analytics, and follow-up reminders for your job
+            search.
+          </p>
+          <div
+            className="rise-in mt-7 flex flex-col gap-3 sm:flex-row"
+            style={{ animationDelay: "160ms" }}
+          >
+            <Button size="lg" asChild>
+              <Link href="/signup">
+                Get started
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="secondary" asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="relative mt-14">
-        <HeroPreview />
+        <div
+          className="rise-in lg:-mr-10 xl:-mr-20"
+          style={{ animationDelay: "120ms" }}
+        >
+          <HeroPreview />
+        </div>
       </div>
     </section>
   );
@@ -332,26 +346,30 @@ const SAMPLE_ROWS = [
 
 function Features() {
   return (
-    <section className="relative pt-2 pb-12 sm:pt-4 sm:pb-16">
-      <div className="mx-auto max-w-2xl text-center">
+    <section className="relative pb-14 pt-4 sm:pb-20">
+      <div className="rise-in mx-auto max-w-2xl text-center">
         <p className="eyebrow">Features</p>
         <h2 className="mt-2 text-balance font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
           Built for tracking a job search.
         </h2>
       </div>
 
-      <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <FeatureCard
+      <div className="mt-12 space-y-12 sm:mt-16 sm:space-y-16">
+        <FeatureRow
+          index="01"
           title="Drag-and-drop kanban"
           body="Move applications across stages. Updates are optimistic so the board feels instant."
           preview={<KanbanPreview />}
         />
-        <FeatureCard
+        <FeatureRow
+          index="02"
           title="Pipeline analytics"
           body="Conversion from Applied through Offer, monthly volume, and outcomes split out from the active pipeline."
           preview={<FunnelPreview />}
+          flip
         />
-        <FeatureCard
+        <FeatureRow
+          index="03"
           title="Follow-up reminders"
           body="Set a follow-up date when you apply. Email reminders go out the morning of."
           preview={<ReminderPreview />}
@@ -361,20 +379,39 @@ function Features() {
   );
 }
 
-function FeatureCard({
+function FeatureRow({
+  index,
   title,
   body,
   preview,
+  flip,
 }: {
+  index: string;
   title: string;
   body: string;
   preview: React.ReactNode;
+  flip?: boolean;
 }) {
   return (
-    <div className="flex flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-ink-soft/40">
-      <h3 className="font-serif text-base font-medium text-ink">{title}</h3>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-mid">{body}</p>
-      <div className="mt-4 flex-1">{preview}</div>
+    <div className="rise-in grid items-center gap-6 sm:grid-cols-2 sm:gap-12">
+      <div className={flip ? "sm:order-2" : ""}>
+        <span className="font-serif text-sm tabular-nums text-ink-soft">
+          {index}
+        </span>
+        <h3 className="mt-2 font-serif text-xl font-medium tracking-tight text-ink sm:text-2xl">
+          {title}
+        </h3>
+        <p className="mt-2.5 max-w-sm text-[15px] leading-relaxed text-ink-mid">
+          {body}
+        </p>
+      </div>
+      <div
+        className={`rounded-xl border border-border bg-surface p-4 transition-transform duration-300 hover:-translate-y-0.5 sm:p-6 ${
+          flip ? "sm:order-1" : ""
+        }`}
+      >
+        {preview}
+      </div>
     </div>
   );
 }
@@ -471,15 +508,15 @@ function ReminderPreview() {
 
 function CallToAction() {
   return (
-    <section className="relative pb-16 sm:pb-20">
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface p-8 text-center sm:p-12">
-        <h2 className="text-balance font-serif text-xl font-medium leading-tight tracking-tight sm:text-2xl">
+    <section className="relative pb-16 sm:pb-24">
+      <div className="rise-in relative overflow-hidden rounded-2xl border border-border bg-surface p-8 sm:p-12">
+        <h2 className="text-balance font-serif text-xl font-medium leading-tight tracking-tight sm:text-3xl">
           Start tracking your applications.
         </h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-ink-mid">
+        <p className="mt-2 max-w-md text-sm text-ink-mid">
           Free to use. No credit card required.
         </p>
-        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button size="lg" asChild>
             <Link href="/signup">
               Create an account
