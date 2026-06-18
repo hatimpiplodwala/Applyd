@@ -13,9 +13,10 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { AlertCircle, Calendar, MapPin, MoveRight } from "lucide-react";
+import { Calendar, MapPin, MoveRight } from "lucide-react";
 import { StatusDot } from "@/components/status-badge";
 import { FollowUpBadge } from "@/components/follow-up-badge";
+import { FormError } from "@/components/form-error";
 import { api } from "@/lib/api";
 import { groupByStatus } from "@/lib/applications";
 import { STATUSES, type Application, type Status } from "@/lib/types";
@@ -68,12 +69,7 @@ export function KanbanBoard({ applications, onEdit, onSaved }: KanbanBoardProps)
 
   return (
     <div className="space-y-3">
-      {error && (
-        <div className="flex items-start gap-2 rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm text-status-rejected-fg">
-          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      {error && <FormError message={error} />}
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}

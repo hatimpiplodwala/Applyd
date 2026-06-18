@@ -11,7 +11,7 @@ import logging
 import re
 import socket
 from functools import lru_cache
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import HTTPException
@@ -46,38 +46,76 @@ SYSTEM_PROMPT = (
 )
 
 
+class _BlockedTarget(Exception):
+    """Raised by the pinned transport when a request — the initial fetch or a
+    redirect hop — targets a disallowed scheme/port or a non-public IP. The
+    fetch layer translates it into a 400 for the caller.
+    """
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+def _is_public_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """The SSRF allow/deny policy for a single resolved IP, in one place."""
+    return not (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_reserved
+        or ip.is_unspecified
+    )
+
+
 def _is_public_address(host: str) -> bool:
-    """Reject hostnames that resolve to loopback / private / link-local IPs.
+    """True only if every IP ``host`` resolves to is public.
 
-    Defends against SSRF where the URL points to internal services
-    (cloud metadata, internal admin UIs, RFC1918 subnets).
-
-    Residual risk: this resolves DNS here and httpx resolves again at connect
-    time, so a DNS-rebinding attacker could pass this check and then have the
-    connection land on a private IP. Closing that fully requires pinning the
-    connection to the validated IP (a custom transport). Given this endpoint is
-    authenticated and rate-limited, that hardening is tracked but not yet done.
+    Cheap up-front gate used before a fetch is attempted (see _validate_url).
+    The connection itself is re-resolved and pinned in _PinnedTransport, which
+    is what actually defends against DNS rebinding.
     """
     try:
         infos = socket.getaddrinfo(host, None)
     except socket.gaierror:
         return False
     for info in infos:
+        try:
+            ip = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            return False
+        if not _is_public_ip(ip):
+            return False
+    return True
+
+
+def _resolve_public_ip(host: str) -> str:
+    """Resolve ``host`` once and return a single vetted public IP to connect to.
+
+    Rejects (with _BlockedTarget) if the host can't resolve or any returned
+    address is non-public. Pinning the socket to the IP returned here — the same
+    IP we just validated — is what closes the DNS-rebinding gap: there is no
+    second, unchecked resolution at connect time.
+    """
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror as exc:
+        raise _BlockedTarget("URL must resolve to a public address") from exc
+    chosen: str | None = None
+    for info in infos:
         addr = info[4][0]
         try:
             ip = ipaddress.ip_address(addr)
-        except ValueError:
-            return False
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_multicast
-            or ip.is_reserved
-            or ip.is_unspecified
-        ):
-            return False
-    return True
+        except ValueError as exc:
+            raise _BlockedTarget("URL must resolve to a public address") from exc
+        if not _is_public_ip(ip):
+            raise _BlockedTarget("URL must resolve to a public address")
+        if chosen is None:
+            chosen = addr
+    if chosen is None:
+        raise _BlockedTarget("URL must resolve to a public address")
+    return chosen
 
 
 def _port_allowed(parsed) -> bool:
@@ -93,37 +131,12 @@ def _port_allowed(parsed) -> bool:
     return port is None or port in ALLOWED_PORTS
 
 
-def _check_redirect_target(response: httpx.Response) -> None:
-    """Event hook: re-validate each redirect Location against the SSRF guard.
-
-    follow_redirects=True alone only checks the original URL. A public URL
-    could redirect to 169.254.169.254 (AWS metadata) or an RFC-1918 address,
-    bypassing _is_public_address(). This hook fires before httpx follows each
-    hop so we can abort the chain early.
-    """
-    if not response.is_redirect:
-        return
-    location = response.headers.get("location", "")
-    if not location:
-        return
-    absolute = urljoin(str(response.url), location)
-    parsed = urlparse(absolute)
-    if parsed.scheme not in ("http", "https"):
-        raise HTTPException(
-            status_code=400, detail="Redirect to non-HTTP URL blocked"
-        )
-    if not _port_allowed(parsed):
-        raise HTTPException(
-            status_code=400, detail="Redirect to a non-standard port blocked"
-        )
-    if not parsed.hostname or not _is_public_address(parsed.hostname):
-        raise HTTPException(
-            status_code=400,
-            detail="URL redirects to a non-public address",
-        )
-
-
 def _validate_url(url: str) -> str:
+    """Cheap up-front SSRF gate, run before any connection is opened: require
+    http(s), a host, a standard port, and a public-resolving host. The
+    authoritative per-hop check + IP pinning happens in _PinnedTransport, so
+    this is purely a fast rejection for obviously-bad input.
+    """
     parsed = urlparse(url.strip())
     if parsed.scheme not in ("http", "https"):
         raise HTTPException(
@@ -143,8 +156,35 @@ def _validate_url(url: str) -> str:
     return parsed.geturl()
 
 
-# Module-level client reuses TCP connections across requests (connection pooling).
-# event_hooks re-validates each redirect target against the SSRF guard.
+class _PinnedTransport(httpx.HTTPTransport):
+    """Resolve, SSRF-validate, and pin every request to a vetted public IP.
+
+    httpx calls this for the initial request *and* each redirect hop it follows,
+    so validating here — rather than only up front — is what makes redirects and
+    DNS rebinding safe: the host is re-resolved at the moment of connection and
+    the socket is pinned to the exact IP we just vetted. The original Host header
+    (set by the client) is left intact for vhost routing, and the TLS SNI is
+    pinned to the real hostname so certificate verification still works.
+    """
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        url = request.url
+        if url.scheme not in ("http", "https"):
+            raise _BlockedTarget("URL must use http or https")
+        host = url.host
+        if not host:
+            raise _BlockedTarget("URL is missing a host")
+        if url.port is not None and url.port not in ALLOWED_PORTS:
+            raise _BlockedTarget("URL must use a standard web port (80 or 443)")
+        ip = _resolve_public_ip(host)
+        request.url = url.copy_with(host=ip)
+        request.extensions = {**request.extensions, "sni_hostname": host}
+        return super().handle_request(request)
+
+
+# Module-level client reuses TCP connections across requests (connection
+# pooling). The pinning transport re-validates and pins every hop, including
+# redirects, against the SSRF guard.
 _http_client = httpx.Client(
     timeout=FETCH_TIMEOUT_SECONDS,
     follow_redirects=True,
@@ -153,7 +193,7 @@ _http_client = httpx.Client(
         "User-Agent": "Mozilla/5.0 (compatible; Applyd/1.0; +https://applyd.app)",
         "Accept": "text/html,application/xhtml+xml",
     },
-    event_hooks={"response": [_check_redirect_target]},
+    transport=_PinnedTransport(),
 )
 
 
@@ -179,6 +219,9 @@ def _fetch_text(url: str) -> str:
                     break
                 chunks.append(chunk)
             raw = b"".join(chunks)
+    except _BlockedTarget as exc:
+        # An initial-URL or redirect-hop target that failed the SSRF guard.
+        raise HTTPException(status_code=400, detail=exc.detail) from exc
     except httpx.HTTPStatusError as exc:
         code = exc.response.status_code
         if code in (401, 403, 429):

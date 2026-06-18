@@ -23,23 +23,21 @@ export function groupByStatus(
   return groups;
 }
 
-/** Insert one row into a list kept in date_applied-descending order. */
-export function insertSorted(
-  list: Application[],
-  app: Application
-): Application[] {
-  const next = [...list, app];
-  next.sort((a, b) => b.date_applied.localeCompare(a.date_applied));
-  return next;
-}
-
-/** Insert several rows, keeping date_applied-descending order. */
+/** Insert rows into a list kept in date_applied-descending order. */
 export function insertManySorted(
   list: Application[],
   apps: Application[]
 ): Application[] {
   if (apps.length === 0) return list;
-  const next = [...list, ...apps];
-  next.sort((a, b) => b.date_applied.localeCompare(a.date_applied));
-  return next;
+  return [...list, ...apps].sort((a, b) =>
+    b.date_applied.localeCompare(a.date_applied)
+  );
+}
+
+/** Insert one row, keeping date_applied-descending order. */
+export function insertSorted(
+  list: Application[],
+  app: Application
+): Application[] {
+  return insertManySorted(list, [app]);
 }

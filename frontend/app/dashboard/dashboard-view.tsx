@@ -71,7 +71,9 @@ export function DashboardView({ email }: DashboardViewProps) {
     load();
   }
 
-  function handleSaved(app: Application) {
+  // Stable identities so the memoized table rows don't re-render on unrelated
+  // state changes (e.g. selecting a checkbox or typing in search).
+  const handleSaved = useCallback((app: Application) => {
     setApplications((prev) => {
       const idx = prev.findIndex((a) => a.id === app.id);
       if (idx === -1) return [app, ...prev];
@@ -79,19 +81,22 @@ export function DashboardView({ email }: DashboardViewProps) {
       next[idx] = app;
       return next;
     });
-  }
+  }, []);
 
-  async function handleStatusChange(app: Application, status: Status) {
-    if (app.status === status) return;
-    handleSaved({ ...app, status });
-    try {
-      const updated = await api.updateApplication(app.id, { status });
-      handleSaved(updated);
-    } catch {
-      handleSaved(app);
-      setToast({ message: "Couldn't update status — reverted." });
-    }
-  }
+  const handleStatusChange = useCallback(
+    async (app: Application, status: Status) => {
+      if (app.status === status) return;
+      handleSaved({ ...app, status });
+      try {
+        const updated = await api.updateApplication(app.id, { status });
+        handleSaved(updated);
+      } catch {
+        handleSaved(app);
+        setToast({ message: "Couldn't update status — reverted." });
+      }
+    },
+    [handleSaved]
+  );
 
   // The API delete fires only after the undo window elapses.
   async function commitDelete(app: Application) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { InlineStatusSelect } from "@/components/inline-status-select";
 import { SelectionToolbar } from "@/components/selection-toolbar";
 import type { Application, Status } from "@/lib/types";
-import { daysUntil, formatDate } from "@/lib/utils";
+import { daysUntil, formatDate, isHttpUrl } from "@/lib/utils";
 
 interface ApplicationsTableProps {
   applications: Application[];
@@ -55,27 +55,26 @@ export function ApplicationsTable({
 
   const filtered = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
-    let rows = applications.filter((a) => {
-      if (statusFilter !== "All" && a.status !== statusFilter) return false;
-      if (
-        q &&
-        !a.company.toLowerCase().includes(q) &&
-        !a.role.toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      return true;
-    });
-
-    rows = [...rows].sort((a, b) => {
-      const av = a[sortKey] ?? "";
-      const bv = b[sortKey] ?? "";
-      if (av < bv) return sortDir === "asc" ? -1 : 1;
-      if (av > bv) return sortDir === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    return rows;
+    // .filter() already returns a fresh array, so sort it in place — no copy.
+    return applications
+      .filter((a) => {
+        if (statusFilter !== "All" && a.status !== statusFilter) return false;
+        if (
+          q &&
+          !a.company.toLowerCase().includes(q) &&
+          !a.role.toLowerCase().includes(q)
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const av = a[sortKey] ?? "";
+        const bv = b[sortKey] ?? "";
+        if (av < bv) return sortDir === "asc" ? -1 : 1;
+        if (av > bv) return sortDir === "asc" ? 1 : -1;
+        return 0;
+      });
   }, [applications, statusFilter, debouncedSearch, sortKey, sortDir]);
 
   function toggleSort(key: SortKey) {
@@ -86,6 +85,27 @@ export function ApplicationsTable({
       setSortDir(key === "date_applied" ? "desc" : "asc");
     }
   }
+
+  // Stable callbacks for the memoized rows. The selection toggle reads the live
+  // set through a ref so it doesn't need `selected` in its deps (which would
+  // change identity on every selection and defeat the memo).
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+
+  const handleEdit = useCallback((app: Application) => onEdit(app), [onEdit]);
+  const handleRowStatus = useCallback(
+    (app: Application, status: Status) => onStatusChange(app, status),
+    [onStatusChange]
+  );
+  const handleToggle = useCallback(
+    (app: Application, checked: boolean) => {
+      const next = new Set(selectedRef.current);
+      if (checked) next.add(app.id);
+      else next.delete(app.id);
+      onSelectedChange(next);
+    },
+    [onSelectedChange]
+  );
 
   const hasFilters = statusFilter !== "All" || search.trim().length > 0;
 
@@ -192,15 +212,10 @@ export function ApplicationsTable({
                   <Row
                     key={a.id}
                     app={a}
-                    onEdit={() => onEdit(a)}
-                    onStatusChange={(status) => onStatusChange(a, status)}
                     selected={selected.has(a.id)}
-                    onSelect={(checked) => {
-                      const next = new Set(selected);
-                      if (checked) next.add(a.id);
-                      else next.delete(a.id);
-                      onSelectedChange(next);
-                    }}
+                    onEdit={handleEdit}
+                    onStatusChange={handleRowStatus}
+                    onSelect={handleToggle}
                   />
                 ))
               )}
@@ -255,7 +270,7 @@ function SortableHeader({
   );
 }
 
-function Row({
+const Row = memo(function Row({
   app,
   onEdit,
   onStatusChange,
@@ -263,10 +278,10 @@ function Row({
   onSelect,
 }: {
   app: Application;
-  onEdit: () => void;
-  onStatusChange: (status: Status) => void;
+  onEdit: (app: Application) => void;
+  onStatusChange: (app: Application, status: Status) => void;
   selected: boolean;
-  onSelect: (checked: boolean) => void;
+  onSelect: (app: Application, checked: boolean) => void;
 }) {
   // The row is a mouse convenience: clicking it opens the editor, except on the
   // interactive controls (checkbox, status select, link, company button), which
@@ -287,7 +302,7 @@ function Row({
     <tr
       onClick={(e) => {
         if (isInteractive(e.target)) return;
-        onEdit();
+        onEdit(app);
       }}
       className={`animate-fade-in cursor-pointer border-b border-l-2 border-border/60 transition-colors last:border-b-0 hover:bg-surface-sunken/40 ${
         urgent ? "border-l-status-rejected-fg" : "border-l-transparent"
@@ -299,13 +314,13 @@ function Row({
           aria-label={`Select ${app.company}`}
           className="h-3.5 w-3.5 accent-primary"
           checked={selected}
-          onChange={(e) => onSelect(e.target.checked)}
+          onChange={(e) => onSelect(app, e.target.checked)}
         />
       </td>
       <td className="px-4 py-3 font-medium text-foreground">
         <button
           type="button"
-          onClick={onEdit}
+          onClick={() => onEdit(app)}
           aria-label={`Edit ${app.company}`}
           className="text-left hover:underline focus-visible:underline focus-visible:outline-none"
         >
@@ -319,7 +334,7 @@ function Row({
       <td className="px-4 py-3">
         <InlineStatusSelect
           status={app.status}
-          onChange={onStatusChange}
+          onChange={(status) => onStatusChange(app, status)}
           label={app.company}
         />
       </td>
@@ -333,7 +348,7 @@ function Row({
         {app.salary_range ?? "—"}
       </td>
       <td className="hidden px-4 py-3 md:table-cell">
-        {app.job_url && /^https?:\/\//i.test(app.job_url) ? (
+        {app.job_url && isHttpUrl(app.job_url) ? (
           <a
             href={app.job_url}
             target="_blank"
@@ -349,7 +364,7 @@ function Row({
       </td>
     </tr>
   );
-}
+});
 
 function EmptyRow({ hasFilters }: { hasFilters: boolean }) {
   const Icon = hasFilters ? SearchX : Inbox;

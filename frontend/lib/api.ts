@@ -12,6 +12,31 @@ async function authHeader(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${session.access_token}` };
 }
 
+// Pull a clean, human-readable message out of an error response instead of
+// surfacing the raw body. The backend speaks FastAPI ({detail: "..."} or a
+// pydantic {detail: [{msg}]}) and slowapi ({error: "..."}); anything else falls
+// back to the status so users never see a JSON envelope or an HTML error page.
+async function errorMessage(res: Response): Promise<string> {
+  const fallback = `Request failed (${res.status})`;
+  let body: string;
+  try {
+    body = await res.text();
+  } catch {
+    return fallback;
+  }
+  try {
+    const data = JSON.parse(body);
+    const detail = data?.detail ?? data?.error;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail) && typeof detail[0]?.msg === "string") {
+      return detail[0].msg;
+    }
+  } catch {
+    // Not JSON — use the fallback rather than dumping the raw body.
+  }
+  return fallback;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = {
     "Content-Type": "application/json",
@@ -19,10 +44,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...(init?.headers ?? {}),
   };
   const res = await fetch(`${API_URL}${path}`, { ...init, headers });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(await errorMessage(res));
   if (res.status === 204) return undefined as T;
   return res.json();
 }

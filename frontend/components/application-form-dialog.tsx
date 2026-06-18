@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Save, Sparkles, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
-import { toLocalIso } from "@/lib/utils";
+import { FormError } from "@/components/form-error";
+import { isHttpUrl, toLocalIso } from "@/lib/utils";
 import { STATUSES, type Application, type ApplicationInput, type Status } from "@/lib/types";
 import {
   Dialog,
@@ -156,7 +157,7 @@ export function ApplicationFormDialog({
     }
 
     const url = form.job_url.trim();
-    if (url && !/^https?:\/\//i.test(url)) {
+    if (url && !isHttpUrl(url)) {
       setError("Job URL must start with http:// or https://");
       return;
     }
@@ -424,12 +425,7 @@ export function ApplicationFormDialog({
             </div>
           )}
 
-          {error && (
-            <div className="flex items-start gap-2 rounded-md border border-status-rejected-border bg-status-rejected-bg px-3 py-2 text-sm text-status-rejected-fg">
-              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+          {error && <FormError message={error} />}
 
           <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
             <div>

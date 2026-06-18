@@ -4,7 +4,20 @@ import {
   pickCanonicalUrl,
   buildExtraction,
   parseResponseToForm,
+  isHttp,
 } from "../src/lib/extract";
+
+describe("isHttp", () => {
+  it("accepts http(s) and rejects everything else", () => {
+    expect(isHttp("https://x.com")).toBe(true);
+    expect(isHttp("http://x.com")).toBe(true);
+    expect(isHttp("HTTPS://x.com")).toBe(true);
+    expect(isHttp("ftp://x")).toBe(false);
+    expect(isHttp("javascript:void(0)")).toBe(false);
+    expect(isHttp(null)).toBe(false);
+    expect(isHttp("")).toBe(false);
+  });
+});
 
 describe("trimPageText", () => {
   it("collapses whitespace and trims", () => {

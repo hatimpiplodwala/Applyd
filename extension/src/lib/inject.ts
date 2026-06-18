@@ -30,6 +30,12 @@ export async function extractTab(
     target: { tabId },
     func: pageExtractor,
   });
+  // A restricted page (chrome://, the web store, a PDF viewer) can yield no
+  // usable result even when executeScript itself resolves; fail clearly so the
+  // caller shows the "open a job posting" state instead of a raw TypeError.
+  if (!result?.result) {
+    throw new Error("Couldn't read this page.");
+  }
   const data = result.result as Omit<RawExtraction, "tabUrl">;
   return { ...data, tabUrl };
 }

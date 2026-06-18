@@ -4,27 +4,9 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
+  // CSP is set per-request in middleware.ts (it carries a script nonce). These
+  // static headers apply to every route, including assets the matcher skips.
   async headers() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-    const connectSrc = [
-      "'self'",
-      apiUrl,
-      supabaseUrl,
-      "https://*.supabase.co",
-      "wss://*.supabase.co",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'",
-      `connect-src ${connectSrc}`,
-      "img-src 'self' data: https:",
-      "font-src 'self'",
-      "frame-ancestors 'none'",
-    ].join("; ");
     return [
       {
         source: "/(.*)",
@@ -32,7 +14,6 @@ const nextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];

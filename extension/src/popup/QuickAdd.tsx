@@ -7,6 +7,7 @@ import {
   buildExtraction,
   parseResponseToForm,
   fallbackForm,
+  isHttp,
   type FormState,
   type RawExtraction,
 } from "../lib/extract";
@@ -146,6 +147,12 @@ export default function QuickAdd({
     e.preventDefault();
     if (!form) return;
     setError(null);
+    // Catch a bad URL here rather than after a round-trip to the backend's
+    // 422 (parity with the web form).
+    if (form.job_url && !isHttp(form.job_url)) {
+      setError("Job URL must start with http:// or https://");
+      return;
+    }
     setPhase("saving");
     try {
       if (!dupWarn) {

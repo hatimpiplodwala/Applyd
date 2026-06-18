@@ -26,7 +26,7 @@ export interface FormState {
   notes: string;
 }
 
-function isHttp(value: string | null): value is string {
+export function isHttp(value: string | null): value is string {
   return !!value && /^https?:\/\//i.test(value);
 }
 

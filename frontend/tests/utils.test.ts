@@ -1,5 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { daysUntil, toLocalIso, formatDate } from "@/lib/utils";
+import { daysUntil, toLocalIso, formatDate, isHttpUrl } from "@/lib/utils";
+
+describe("isHttpUrl", () => {
+  it("accepts http and https, case-insensitively", () => {
+    expect(isHttpUrl("http://x.com")).toBe(true);
+    expect(isHttpUrl("https://x.com")).toBe(true);
+    expect(isHttpUrl("HTTPS://x.com")).toBe(true);
+  });
+
+  it("rejects other schemes and bare strings", () => {
+    expect(isHttpUrl("ftp://x.com")).toBe(false);
+    expect(isHttpUrl("javascript:alert(1)")).toBe(false);
+    expect(isHttpUrl("x.com")).toBe(false);
+    expect(isHttpUrl("")).toBe(false);
+  });
+});
 
 describe("daysUntil", () => {
   beforeEach(() => {

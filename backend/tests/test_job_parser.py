@@ -83,41 +83,59 @@ def test_validate_url_rejects_internal_targets(url):
     assert exc.value.status_code == 400
 
 
-# --- _check_redirect_target --------------------------------------------------
+# --- _resolve_public_ip ------------------------------------------------------
 
-def _redirect(location: str, *, start: str = "https://8.8.8.8/start", status: int = 302):
-    return httpx.Response(
-        status,
-        headers={"location": location},
-        request=httpx.Request("GET", start),
+@pytest.mark.parametrize("host", ["8.8.8.8", "1.1.1.1"])
+def test_resolve_public_ip_returns_the_address(host):
+    # Literal public IPs resolve to themselves (no DNS), so the pinned IP is known.
+    assert jp._resolve_public_ip(host) == host
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "10.0.0.1", "169.254.169.254", "::1"])
+def test_resolve_public_ip_blocks_internal(host):
+    with pytest.raises(jp._BlockedTarget):
+        jp._resolve_public_ip(host)
+
+
+def test_resolve_public_ip_blocks_unresolvable():
+    with pytest.raises(jp._BlockedTarget):
+        jp._resolve_public_ip("not a real host at all .invalid")
+
+
+# --- _PinnedTransport --------------------------------------------------------
+# The transport re-validates and pins every hop (initial + redirects), which is
+# what closes the DNS-rebinding gap. These exercise it without real networking.
+
+def test_transport_pins_connection_to_resolved_ip(monkeypatch):
+    captured = {}
+
+    def fake_parent(self, request):
+        # Stand in for the real socket-opening parent; record what it'd dial.
+        captured["host"] = request.url.host
+        captured["sni"] = request.extensions.get("sni_hostname")
+        return httpx.Response(200, request=request)
+
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", fake_parent)
+    resp = jp._PinnedTransport().handle_request(
+        httpx.Request("GET", "http://8.8.8.8/jobs")
     )
+    assert resp.status_code == 200
+    assert captured["host"] == "8.8.8.8"  # connection pinned to the resolved IP
+    assert captured["sni"] == "8.8.8.8"   # TLS SNI bound to the hostname
 
 
-def test_redirect_to_public_is_allowed():
-    # Should not raise.
-    jp._check_redirect_target(_redirect("https://1.1.1.1/next"))
-
-
-def test_redirect_to_private_is_blocked():
-    with pytest.raises(HTTPException) as exc:
-        jp._check_redirect_target(_redirect("http://169.254.169.254/latest/"))
-    assert exc.value.status_code == 400
-
-
-def test_redirect_relative_resolved_against_public_base_is_allowed():
-    # Relative redirect resolves against the public start host -> allowed.
-    jp._check_redirect_target(_redirect("/another/path"))
-
-
-def test_redirect_to_non_http_scheme_is_blocked():
-    with pytest.raises(HTTPException) as exc:
-        jp._check_redirect_target(_redirect("file:///etc/passwd"))
-    assert exc.value.status_code == 400
-
-
-def test_non_redirect_response_is_ignored():
-    ok = httpx.Response(200, request=httpx.Request("GET", "https://8.8.8.8/"))
-    jp._check_redirect_target(ok)  # no exception
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://127.0.0.1/admin",       # private IP
+        "http://169.254.169.254/meta",  # link-local (cloud metadata)
+        "http://8.8.8.8:22/",           # non-standard port
+        "ftp://8.8.8.8/x",              # non-http scheme
+    ],
+)
+def test_transport_blocks_unsafe_targets(url):
+    with pytest.raises(jp._BlockedTarget):
+        jp._PinnedTransport().handle_request(httpx.Request("GET", url))
 
 
 # --- _coerce -----------------------------------------------------------------
@@ -161,4 +179,11 @@ def test_parse_job_pasted_text(monkeypatch):
 def test_parse_job_empty_input_raises():
     with pytest.raises(HTTPException) as exc:
         jp.parse_job(url=None, text="   ", api_key="k")
+    assert exc.value.status_code == 400
+
+
+def test_parse_job_blocks_internal_url():
+    # The URL path is rejected by the up-front SSRF gate before any fetch.
+    with pytest.raises(HTTPException) as exc:
+        jp.parse_job(url="http://127.0.0.1/admin", text=None, api_key="k")
     assert exc.value.status_code == 400

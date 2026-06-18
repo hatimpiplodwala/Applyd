@@ -27,6 +27,13 @@ export const viewport = {
   maximumScale: 5,
 };
 
+// The CSP in middleware.ts carries a per-request script nonce, and Next only
+// stamps that nonce onto the scripts of dynamically-rendered pages. Forcing
+// dynamic rendering app-wide means every page (including the otherwise-static
+// auth/landing pages) gets nonce'd scripts, so script-src can drop
+// 'unsafe-inline'. The per-request render cost is negligible at this scale.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: {

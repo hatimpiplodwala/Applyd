@@ -1,13 +1,10 @@
-import hashlib
 import logging
-import time
-from collections import OrderedDict
 from dataclasses import dataclass
-from threading import Lock
 
 from fastapi import Depends, Header, HTTPException, status
 from gotrue.errors import AuthApiError
 
+from app.cache import TTLCache, hash_token
 from app.supabase_client import get_user_client
 
 logger = logging.getLogger(__name__)
@@ -20,41 +17,11 @@ class CurrentUser:
     access_token: str
 
 
-# In-process cache for Supabase auth.get_user results. Avoids a network
-# round-trip to Supabase Auth on every request. An OrderedDict gives O(1)
-# LRU eviction; entries expire after CACHE_TTL_SECONDS so a logged-out token
-# stops working within the TTL window.
-CACHE_TTL_SECONDS = 60
-CACHE_MAX_ENTRIES = 1024
-_cache: "OrderedDict[str, tuple[float, CurrentUser]]" = OrderedDict()
-_cache_lock = Lock()
-
-
-def _token_key(token: str) -> str:
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
-
-
-def _cache_get(token: str) -> CurrentUser | None:
-    key = _token_key(token)
-    with _cache_lock:
-        entry = _cache.get(key)
-        if entry is None:
-            return None
-        expires_at, user = entry
-        if expires_at < time.monotonic():
-            del _cache[key]
-            return None
-        _cache.move_to_end(key)
-        return user
-
-
-def _cache_put(token: str, user: CurrentUser) -> None:
-    key = _token_key(token)
-    with _cache_lock:
-        _cache[key] = (time.monotonic() + CACHE_TTL_SECONDS, user)
-        _cache.move_to_end(key)
-        if len(_cache) > CACHE_MAX_ENTRIES:
-            _cache.popitem(last=False)  # evict least-recently-used
+# In-process cache for Supabase auth.get_user results so we don't round-trip to
+# Supabase Auth on every request. TTL'd so a logged-out token stops working
+# within the window; keyed by a hash of the token so raw tokens never sit in
+# memory.
+_users: TTLCache[CurrentUser] = TTLCache(ttl_seconds=60, max_entries=1024)
 
 
 def get_current_user(
@@ -67,8 +34,9 @@ def get_current_user(
         )
 
     token = authorization.split(" ", 1)[1].strip()
+    key = hash_token(token)
 
-    cached = _cache_get(token)
+    cached = _users.get(key)
     if cached is not None:
         return cached
 
@@ -99,7 +67,7 @@ def get_current_user(
         email=getattr(user, "email", None),
         access_token=token,
     )
-    _cache_put(token, current)
+    _users.put(key, current)
     return current
 
 

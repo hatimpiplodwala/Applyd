@@ -5,6 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** True for a string beginning with http:// or https:// (case-insensitive). */
+export function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value);
+}
+
 export function daysUntil(iso: string): number {
   const target = new Date(iso + "T00:00:00");
   const today = new Date();
