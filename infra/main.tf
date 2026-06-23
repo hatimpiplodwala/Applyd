@@ -189,6 +189,9 @@ data "aws_iam_policy_document" "deploy" {
     actions = [
       "lambda:UpdateFunctionCode",
       "lambda:GetFunction",
+      # The `aws lambda wait function-updated` step in CI polls this API to
+      # confirm the rollout finished; without it the deploy errors at the end.
+      "lambda:GetFunctionConfiguration",
     ]
     resources = [aws_lambda_function.backend.arn]
   }
