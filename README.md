@@ -7,7 +7,7 @@
 Log every role you apply to, move it through your pipeline, and let AI pull the details
 straight from a posting — on the web or from a one-click browser extension.
 
-Next.js&nbsp;·&nbsp;FastAPI&nbsp;·&nbsp;Supabase&nbsp;·&nbsp;Gemini&nbsp;·&nbsp;Manifest&nbsp;V3
+Next.js&nbsp;·&nbsp;FastAPI&nbsp;·&nbsp;Supabase&nbsp;·&nbsp;Gemini&nbsp;·&nbsp;Docker&nbsp;·&nbsp;AWS&nbsp;Lambda&nbsp;·&nbsp;Manifest&nbsp;V3
 
 </div>
 
@@ -63,6 +63,7 @@ server reaches out to a third party.
 | API | FastAPI, Pydantic v2, Supabase Python client, `httpx` + BeautifulSoup, SlowAPI (rate limiting), Google Gemini (`google-genai`) |
 | Extension | Manifest V3, Vite + `@crxjs/vite-plugin`, React, `@supabase/auth-js` |
 | Data / Auth | Supabase (PostgreSQL + Auth + Row-Level Security) |
+| Infra / CI | Docker (Lambda container image), AWS Lambda + API Gateway, Amazon ECR, Terraform (IaC), GitHub Actions (OIDC — no stored keys) |
 | Tests | pytest (backend), Vitest (frontend + extension) |
 
 ## Engineering highlights
@@ -71,7 +72,7 @@ A few things that went deeper than the feature list suggests:
 
 - **SSRF-hardened URL parsing.** The "paste a link" feature fetches arbitrary URLs server-side — a classic SSRF foot-gun. Requests are validated against private/loopback/link-local ranges (including the cloud-metadata IP), and **every redirect hop is re-checked**, not just the first URL. The one residual (DNS rebinding between check and connect) is documented in the code rather than hand-waved.
 - **Auth as the user, not as root.** The API never uses a service-role key; it forwards the caller's JWT to Supabase so RLS enforces ownership. Token validation is cached with a TTL + LRU so it isn't a per-request round-trip.
-- **Defense in depth.** Beyond RLS and the SSRF guard: per-route rate limiting (SlowAPI), strict input validation and length bounds (Pydantic v2), CORS locked to explicit origins, and `nosniff` / `frame-deny` / `no-referrer` security headers on every response.
+- **Defense in depth.** Beyond RLS and the SSRF guard: rate limiting at two layers (API Gateway edge throttling + per-route SlowAPI, keyed on the unspoofable API Gateway source IP), strict input validation and length bounds (Pydantic v2), CORS locked to explicit origins, and `nosniff` / `frame-deny` / `no-referrer` security headers on every response.
 - **Optimistic, but reversible.** Inline status edits, kanban drags, and bulk changes apply instantly and roll back on failure. Deletes — single *or* bulk — run through one shared undo window, so the API call only fires once the toast times out.
 - **Tested where it counts.** ~85 tests across the stack. The backend (pytest) splits pure-logic units (the SSRF guard, the parser) from integration tests that drive the real FastAPI routes via `TestClient` with Supabase and Gemini mocked at the dependency boundary — so they run offline with no credentials. Frontend/extension helpers (CSV building, timezone-safe dates, sorted re-insertion, page extraction) are covered by Vitest.
 - **Performance passes.** Pooled `httpx` connections, a singleton Supabase browser client, pagination on list endpoints, and a slimmer extension bundle (swapped to `@supabase/auth-js`).
@@ -159,4 +160,8 @@ Backend tests mock Supabase and Gemini at the dependency boundary, so they run o
 
 ## Deployment
 
-Frontend → Vercel · Backend → any Python/container host (e.g. Render), with `CORS_ORIGINS` pointed at the frontend domain · Extension → `npm run build`, then upload `extension/dist` to the Chrome Web Store / Edge Add-ons with production `VITE_*` values. All `.env*` files are gitignored.
+- **Frontend → Vercel.** Linked to the repo; set `NEXT_PUBLIC_*` env vars (notably `NEXT_PUBLIC_API_URL` = the backend's API Gateway endpoint).
+- **Backend → AWS Lambda (container image).** The FastAPI app is wrapped with [Mangum](https://mangum.io) and packaged by [`backend/Dockerfile`](backend/Dockerfile), then run on Lambda behind a public **API Gateway HTTP API**. Infrastructure — ECR, the function, its API Gateway, IAM/OIDC, and log retention — is defined in Terraform under [`infra/`](infra/). Pushes to `main` that touch `backend/**` build the image, push it to ECR, and roll it out via GitHub Actions ([`deploy-backend.yml`](.github/workflows/deploy-backend.yml)), authenticating with **GitHub OIDC** — no AWS keys live in the repo. `CORS_ORIGINS` is a Lambda env var set by Terraform. First-time setup is in [`infra/README.md`](infra/README.md); the whole footprint runs at effectively $0 on the AWS free tier (Lambda's 1M req/mo is always free; API Gateway and ECR are free for 12 months, then cents at this traffic). Run the same image locally with `docker compose up --build`.
+- **Extension →** `npm run build`, then upload `extension/dist` to the Chrome Web Store / Edge Add-ons with production `VITE_*` values (`VITE_API_URL` = the API Gateway endpoint).
+
+All `.env*` files, Terraform state, and `*.tfvars` are gitignored.

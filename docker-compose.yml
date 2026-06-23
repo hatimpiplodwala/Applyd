@@ -1,0 +1,21 @@
+# Run the backend's Lambda container locally, against the Runtime Interface
+# Emulator that the AWS base image bundles. This is a dev aid — deployment goes
+# through Terraform + GitHub Actions, not this file.
+#
+#   docker compose up --build
+#
+# Then invoke it like Lambda would (a Function URL event is in events/health.json):
+#
+#   curl -s -XPOST \
+#     "http://localhost:9000/2015-03-31/functions/function/invocations" \
+#     -d @backend/events/health.json
+#
+# Expect a 200 with body {"status":"ok"}. Requires backend/.env (same vars you
+# already use for local uvicorn: SUPABASE_URL, SUPABASE_ANON_KEY, etc.).
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "9000:8080"
+    env_file:
+      - ./backend/.env

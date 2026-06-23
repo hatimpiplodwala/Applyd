@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from mangum import Mangum
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -46,3 +47,15 @@ def health() -> dict[str, str]:
 
 app.include_router(applications.router)
 app.include_router(parse.router)
+
+
+# AWS Lambda (container image) entry point. Inert for local `uvicorn main:app`:
+# Mangum just adapts Lambda Function URL / API Gateway events to this ASGI app.
+# lifespan="off" because there are no startup/shutdown events — settings, the
+# pooled httpx client, and the auth/token caches all initialize at import, which
+# Lambda runs once per cold container and reuses while the container stays warm.
+#
+# Note: SlowAPI's limiter is in-memory, so on Lambda it is per-instance rather
+# than global. Fine at this app's traffic; a shared store (DynamoDB/Redis) would
+# be the move if rate limits ever needed to hold across concurrent instances.
+handler = Mangum(app, lifespan="off")

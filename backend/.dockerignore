@@ -1,0 +1,14 @@
+# Keep the Lambda image small and free of dev-only / secret files.
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+tests/
+*.md
+.env
+.env.*
+requirements-dev.txt
+Dockerfile
+.dockerignore

@@ -4,18 +4,15 @@ from starlette.requests import Request
 
 
 def client_ip(request: Request) -> str:
-    """Rate-limit key: the real client IP behind the platform proxy.
+    """Rate-limit key: the real client IP, unspoofable behind API Gateway.
 
-    Render/Railway terminate TLS and forward over HTTP, so request.client.host
-    is the proxy, not the user. The platform edge *appends* the real client IP
-    as the rightmost X-Forwarded-For entry; we read that. The rightmost is the
-    one a trusted single-hop proxy adds, so (unlike the leftmost) a client can't
-    spoof it by sending its own X-Forwarded-For header. Falls back to the peer
-    address for local/direct runs with no proxy.
+    On Lambda behind API Gateway (the production deploy), Mangum sets
+    request.client.host from requestContext.http.sourceIp — the source IP API
+    Gateway recorded for the TCP connection. That's a context value, not a
+    request header, so a client cannot forge it to dodge per-IP limits. It is
+    also the real peer address for local/direct runs. We deliberately do NOT
+    read X-Forwarded-For, which any client can set.
     """
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[-1].strip()
     return get_remote_address(request)
 
 

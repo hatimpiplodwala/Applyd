@@ -1,0 +1,63 @@
+name: Deploy backend to AWS Lambda
+
+# Builds the backend container, pushes it to ECR, and rolls it out to Lambda.
+# Auth is via GitHub OIDC -> an IAM role (configured in infra/), so there are no
+# long-lived AWS keys stored in this repo. All inputs are non-secret repo
+# Variables (Settings -> Secrets and variables -> Actions -> Variables):
+#   AWS_REGION, AWS_DEPLOY_ROLE_ARN, ECR_REPOSITORY, LAMBDA_FUNCTION
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write # required to request the OIDC token
+  contents: read
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+      LAMBDA_FUNCTION: ${{ vars.LAMBDA_FUNCTION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          IMAGE="$REGISTRY/$ECR_REPOSITORY"
+          # --provenance=false: Lambda rejects the multi-manifest OCI index that
+          # BuildKit otherwise emits; this keeps it a single-platform manifest.
+          docker build --provenance=false -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" ./backend
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+          echo "IMAGE_URI=$IMAGE:${{ github.sha }}" >> "$GITHUB_ENV"
+
+      - name: Deploy to Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name "$LAMBDA_FUNCTION" \
+            --image-uri "$IMAGE_URI" >/dev/null
+          aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION"
+          echo "Deployed $IMAGE_URI to $LAMBDA_FUNCTION"

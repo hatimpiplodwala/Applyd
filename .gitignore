@@ -24,6 +24,17 @@ supabase_setup.sql
 progress.txt
 DEPLOYMENT.md
 
+# Local design/spec docs (never pushed)
+docs/
+
+# Terraform (keep .tf, .example, and the provider lock; ignore state + secrets)
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+infra/terraform.tfvars
+*.auto.tfvars
+crash.log
+
 # Browser extension build artifacts
 extension/.env
 extension/dist
