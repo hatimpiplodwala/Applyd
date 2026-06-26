@@ -3,11 +3,6 @@ output "api_endpoint" {
   value       = aws_apigatewayv2_api.http.api_endpoint
 }
 
-output "function_url" {
-  description = "Lambda Function URL (blocked on this account; kept for reference). Prefer api_endpoint."
-  value       = aws_lambda_function_url.backend.function_url
-}
-
 output "ecr_repository_url" {
   description = "ECR repo to push images to."
   value       = aws_ecr_repository.backend.repository_url

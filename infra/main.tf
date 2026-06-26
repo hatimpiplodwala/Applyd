@@ -67,7 +67,8 @@ resource "aws_cloudwatch_log_group" "lambda" {
 }
 
 # ---------------------------------------------------------------------------
-# The function and its public HTTPS endpoint (Function URL — no API Gateway)
+# The function itself. Its public endpoint is the API Gateway in apigateway.tf
+# (this account blocks anonymous Lambda Function URLs).
 # ---------------------------------------------------------------------------
 resource "aws_lambda_function" "backend" {
   function_name = var.project_name
@@ -93,24 +94,6 @@ resource "aws_lambda_function" "backend" {
   }
 
   depends_on = [aws_cloudwatch_log_group.lambda]
-}
-
-resource "aws_lambda_function_url" "backend" {
-  function_name      = aws_lambda_function.backend.function_name
-  authorization_type = "NONE" # public endpoint; the app's JWT auth is the gate
-
-  # Let FastAPI's own CORSMiddleware answer preflights (single source of truth).
-}
-
-# A Function URL with AuthType NONE still needs an explicit resource-based
-# permission for anonymous invoke. Terraform (unlike the console) does not add
-# it automatically, and without it the URL returns 403.
-resource "aws_lambda_permission" "function_url" {
-  statement_id           = "AllowPublicFunctionUrlInvoke"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.backend.function_name
-  principal              = "*"
-  function_url_auth_type = "NONE"
 }
 
 # ---------------------------------------------------------------------------

@@ -84,10 +84,9 @@ After that, pushes to `main` that touch `backend/**` deploy automatically via
 
 - `terraform.tfvars` and `*.tfstate` contain secrets and are gitignored. Only the
   `.example` file and the provider lock are committed.
-- The public endpoint is an **API Gateway HTTP API** (`api_endpoint`), not the Lambda
-  Function URL. AWS blocks anonymous Function URL invokes on some accounts (this one
-  included), so API Gateway fronts the function instead — same payload format, no app
-  changes. The Function URL resource still exists but is unused.
+- The public endpoint is an **API Gateway HTTP API** (`api_endpoint`). AWS blocks
+  anonymous Lambda Function URL invokes on some accounts (this one included), so API
+  Gateway fronts the function instead — same payload format, no app changes.
 - If your account already has a GitHub Actions OIDC provider, set
   `create_github_oidc_provider = false` (AWS allows only one per account).
 - Tear it all down with `terraform destroy` (the ECR repo is `force_delete`, so its
